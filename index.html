@@ -173,6 +173,44 @@ input{font-family:inherit;}
   cursor:pointer;
 }
 
+.or-divider{
+  display:flex;align-items:center;gap:10px;
+  margin:18px 0 14px;
+  color:var(--text-muted);
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+}
+.or-divider::before,.or-divider::after{
+  content:"";flex:1;height:1px;background:var(--border-soft);
+}
+
+.share-link-result{
+  display:flex;gap:8px;margin-top:12px;
+}
+.share-link-result input{
+  flex:1;min-width:0;
+  background:var(--bg-deep-2);
+  border:1.5px solid var(--border-soft);
+  border-radius:10px;
+  padding:10px 12px;
+  color:var(--text-muted);
+  font-family:var(--font-mono);
+  font-size:11.5px;
+  outline:none;
+}
+.share-link-result button{
+  background:var(--accent-amber);
+  color:#2a1c05;
+  border:none;
+  border-radius:10px;
+  padding:0 14px;
+  font-weight:700;
+  font-size:12.5px;
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.topbar-right{display:flex;align-items:center;gap:14px;}
+
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
 /* ---------- SHARED TOP BAR ---------- */
@@ -376,7 +414,7 @@ input{font-family:inherit;}
       <div class="card">
         <label class="field-label" for="kode-input">Kode pasangan</label>
         <input id="kode-input" type="text" placeholder="contoh: RUMAH-JINGGA" maxlength="24" autocomplete="off" autocapitalize="characters" />
-        <p class="field-help">Buat kode sendiri lalu kirim ke pasanganmu lewat chat. Siapa pun yang tahu kode ini bisa melihat lokasinya — pilih yang unik, jangan disebar sembarangan.</p>
+        <p class="field-help">Isi kode sendiri, atau langsung buat link di bawah. Siapa pun yang punya kode/link ini bisa melihat lokasinya — pilih yang unik, jangan disebar sembarangan. Link bisa dipakai berkali-kali kapan saja, bukan sekali pakai.</p>
 
         <div class="role-row">
           <button class="role-btn" id="btn-role-a">
@@ -387,6 +425,13 @@ input{font-family:inherit;}
             <span class="emoji">🏠</span>
             Aku yang nunggu
           </button>
+        </div>
+
+        <div class="or-divider"><span>atau</span></div>
+        <button class="big-btn btn-ghost" id="btn-share-link" type="button">🔗 Buat &amp; bagikan link room</button>
+        <div id="share-link-result" class="share-link-result" style="display:none;">
+          <input type="text" id="share-link-value" readonly />
+          <button id="btn-copy-link" type="button">Salin</button>
         </div>
       </div>
 
@@ -400,7 +445,10 @@ input{font-family:inherit;}
       <div class="topbar-left">
         <span class="topbar-code" id="share-code-label">—</span>
       </div>
-      <button class="link-btn" id="btn-a-back">Ganti kode</button>
+      <div class="topbar-right">
+        <button class="link-btn" id="btn-a-share-link">Bagikan link</button>
+        <button class="link-btn" id="btn-a-back">Ganti kode</button>
+      </div>
     </div>
 
     <div class="share-status-row">
@@ -432,7 +480,10 @@ input{font-family:inherit;}
         <div class="topbar-left">
           <span class="topbar-code" id="watch-code-label">—</span>
         </div>
-        <button class="link-btn" id="btn-b-back">Ganti kode</button>
+        <div class="topbar-right">
+          <button class="link-btn" id="btn-b-share-link">Bagikan link</button>
+          <button class="link-btn" id="btn-b-back">Ganti kode</button>
+        </div>
       </div>
 
       <div id="map-watch"></div>
@@ -581,6 +632,75 @@ input{font-family:inherit;}
     return (raw||"").trim().toUpperCase().replace(/\s+/g,"-").slice(0,24);
   }
 
+  /* ---------------- link berbagi (1 link = 1 room, bisa dipakai berkali-kali) ---------------- */
+  const RANDOM_CODE_WORDS = ["SENJA","RUMAH","PULANG","JINGGA","LANGIT","OMBAK","BINTANG","KOPI","HUJAN","LAUT"];
+
+  function generateRandomCode(){
+    const w = RANDOM_CODE_WORDS[Math.floor(Math.random()*RANDOM_CODE_WORDS.length)];
+    const suffix = Math.random().toString(36).slice(2,6).toUpperCase();
+    return w + "-" + suffix;
+  }
+
+  function buildRoomLink(code){
+    const url = new URL(location.href);
+    url.search = "";
+    url.hash = "";
+    url.searchParams.set("room", code);
+    return url.toString();
+  }
+
+  async function copyToClipboard(text){
+    try{
+      await navigator.clipboard.writeText(text);
+      toast("Link disalin! Kirim ke pasanganmu.");
+    }catch(e){
+      toast("Gagal menyalin otomatis — salin manual dari kotak di bawah ya");
+    }
+  }
+
+  function showLinkFallback(url){
+    const wrap = document.getElementById("share-link-result");
+    const input = document.getElementById("share-link-value");
+    if(wrap && input){
+      wrap.style.display = "flex";
+      input.value = url;
+    }
+    copyToClipboard(url);
+  }
+
+  async function shareRoomLink(code){
+    if(!code){ toast("Isi atau buat kode dulu ya"); return; }
+    const url = buildRoomLink(code);
+    const shareData = {
+      title: "otw.",
+      text: "Yuk pantau perjalanan bareng — buka link ini buat gabung ke room " + code + ":",
+      url
+    };
+    if(navigator.share){
+      try{
+        await navigator.share(shareData);
+        return;
+      }catch(e){
+        /* dibatalkan atau gagal — lanjut ke fallback salin link */
+      }
+    }
+    showLinkFallback(url);
+  }
+
+  function readRoomFromURL(){
+    try{
+      const params = new URLSearchParams(location.search);
+      const room = params.get("room");
+      if(room){
+        const clean = new URL(location.href);
+        clean.searchParams.delete("room");
+        history.replaceState({}, "", clean.pathname + clean.search + clean.hash);
+        return normalizeCode(room);
+      }
+    }catch(e){ /* abaikan */ }
+    return null;
+  }
+
   /* ---------------- navigation ---------------- */
   const screens = {
     setup: document.getElementById("screen-setup"),
@@ -619,6 +739,19 @@ input{font-family:inherit;}
     const code = normalizeCode(kodeInput.value);
     if(!code){ toast("Isi kode pasangan dulu ya"); kodeInput.focus(); return; }
     startWatch(code);
+  });
+
+  document.getElementById("btn-share-link").addEventListener("click", ()=>{
+    let code = normalizeCode(kodeInput.value);
+    if(!code){
+      code = generateRandomCode();
+      kodeInput.value = code;
+    }
+    shareRoomLink(code);
+  });
+  document.getElementById("btn-copy-link").addEventListener("click", ()=>{
+    const input = document.getElementById("share-link-value");
+    if(input && input.value) copyToClipboard(input.value);
   });
 
   /* ================= SCREEN A — SHARING ================= */
@@ -747,6 +880,11 @@ input{font-family:inherit;}
     const ss = String(sec%60).padStart(2,"0");
     document.getElementById("a-timer").textContent = mm + ":" + ss;
   }
+
+  document.getElementById("btn-a-share-link").addEventListener("click", ()=>{
+    const code = document.getElementById("share-code-label").textContent;
+    shareRoomLink(code);
+  });
 
   document.getElementById("btn-stop-share").addEventListener("click", ()=>{
     stopSharing();
@@ -1046,6 +1184,10 @@ input{font-family:inherit;}
     currentStopped = null;
   }
 
+  document.getElementById("btn-b-share-link").addEventListener("click", ()=>{
+    shareRoomLink(currentCodeB || document.getElementById("watch-code-label").textContent);
+  });
+
   document.getElementById("btn-b-back").addEventListener("click", ()=>{
     stopWatching();
     clearSession();
@@ -1053,7 +1195,17 @@ input{font-family:inherit;}
   });
 
   /* ---------------- init ---------------- */
-  trySavedSession();
+  const roomFromLink = readRoomFromURL();
+  if(roomFromLink){
+    // Dibuka lewat link yang dibagikan: langsung isi kodenya, biarkan
+    // orang ini pilih perannya sendiri (berbagi atau menunggu) — link
+    // tidak mengunci peran dan bisa dipakai berkali-kali kapan saja.
+    kodeInput.value = roomFromLink;
+    showScreen("setup");
+    toast("Room \"" + roomFromLink + "\" siap — pilih peranmu 👇");
+  } else {
+    trySavedSession();
+  }
 })();
 </script>
 </body>
