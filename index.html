@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+<title>otw. — berbagi lokasi untuk berdua</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg-deep:#111a2e;
+  --bg-deep-2:#0c1220;
+  --bg-panel:#1a2540;
+  --bg-panel-2:#233350;
+  --bg-panel-3:#2c3d60;
+  --accent-amber:#f0a94e;
+  --accent-amber-soft:#f8ce8e;
+  --accent-amber-glow:rgba(240,169,78,.5);
+  --route-lavender:#8ea6e0;
+  --text-warm:#f4efe4;
+  --text-muted:#93a0c2;
+  --success-sage:#a3c78d;
+  --success-glow:rgba(163,199,141,.5);
+  --danger-soft:#e2897f;
+  --border-soft:rgba(255,255,255,.09);
+  --font-display:'Space Grotesk',sans-serif;
+  --font-body:'Inter',sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:radial-gradient(ellipse 120% 60% at 50% -10%, #22335a 0%, var(--bg-deep) 55%, var(--bg-deep-2) 100%);
+  color:var(--text-warm);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+button{font-family:inherit;}
+input{font-family:inherit;}
+::selection{background:var(--accent-amber-glow);}
+
+#app{position:relative;min-height:100vh;}
+.screen{display:none;min-height:100vh;flex-direction:column;}
+.screen.active{display:flex;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+}
+
+/* ---------- SETUP SCREEN ---------- */
+#screen-setup{align-items:center;justify-content:center;padding:32px 20px 40px;text-align:center;}
+.setup-wrap{max-width:420px;width:100%;}
+
+.wordmark{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:42px;
+  letter-spacing:-0.02em;
+  color:var(--text-warm);
+  margin:0 0 6px;
+  opacity:0;
+  animation:fadeUp .7s ease forwards;
+}
+.wordmark .dot{
+  color:var(--accent-amber);
+  text-shadow:0 0 18px var(--accent-amber-glow), 0 0 40px var(--accent-amber-glow);
+}
+.tagline{
+  font-size:16px;
+  color:var(--text-muted);
+  margin:0 0 30px;
+  line-height:1.5;
+  opacity:0;
+  animation:fadeUp .7s ease .1s forwards;
+}
+
+.card{
+  background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
+  border:1px solid var(--border-soft);
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.6);
+  opacity:0;
+  animation:fadeUp .7s ease .2s forwards;
+}
+
+.field-label{
+  display:block;
+  text-align:left;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:8px;
+}
+#kode-input{
+  width:100%;
+  background:var(--bg-deep-2);
+  border:1.5px solid var(--border-soft);
+  border-radius:12px;
+  padding:14px 16px;
+  font-family:var(--font-mono);
+  font-size:16px;
+  letter-spacing:.04em;
+  color:var(--text-warm);
+  text-transform:uppercase;
+  outline:none;
+  transition:border-color .2s;
+}
+#kode-input::placeholder{color:#4c5a80;text-transform:none;letter-spacing:normal;}
+#kode-input:focus{border-color:var(--accent-amber);}
+
+.field-help{
+  text-align:left;
+  font-size:12.5px;
+  color:var(--text-muted);
+  margin:8px 2px 22px;
+  line-height:1.5;
+}
+
+.role-row{display:flex;gap:10px;}
+.role-btn{
+  flex:1;
+  background:var(--bg-panel-3);
+  border:1.5px solid var(--border-soft);
+  border-radius:14px;
+  padding:16px 10px;
+  color:var(--text-warm);
+  cursor:pointer;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:14.5px;
+  transition:transform .15s ease, border-color .15s ease, background .15s ease;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.role-btn .emoji{font-size:26px;}
+.role-btn:hover{border-color:var(--accent-amber); background:#324467;}
+.role-btn:active{transform:scale(.97);}
+.role-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.setup-footnote{
+  margin-top:22px;
+  font-size:12px;
+  color:var(--text-muted);
+  line-height:1.6;
+  opacity:0;
+  animation:fadeUp .7s ease .3s forwards;
+}
+.setup-footnote b{color:var(--accent-amber-soft);font-weight:600;}
+
+.resume-strip{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--bg-panel-2);
+  border:1px solid var(--border-soft);
+  border-radius:14px;
+  padding:12px 16px;
+  margin-bottom:16px;
+  font-size:13.5px;
+  opacity:0;
+  animation:fadeUp .6s ease forwards;
+}
+.resume-strip button{
+  background:var(--accent-amber);
+  color:#2a1c05;
+  border:none;
+  border-radius:8px;
+  padding:8px 12px;
+  font-weight:700;
+  font-size:12.5px;
+  cursor:pointer;
+}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- SHARED TOP BAR ---------- */
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px;
+  background:var(--bg-deep-2);
+  border-bottom:1px solid var(--border-soft);
+  z-index:20;
+}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.topbar-code{
+  font-family:var(--font-mono);
+  font-size:13px;
+  letter-spacing:.03em;
+  color:var(--accent-amber-soft);
+  background:rgba(240,169,78,.1);
+  border:1px solid rgba(240,169,78,.25);
+  padding:5px 10px;
+  border-radius:8px;
+}
+.link-btn{
+  background:none;border:none;color:var(--text-muted);
+  font-size:12.5px;text-decoration:underline;cursor:pointer;padding:4px;
+}
+.link-btn:hover{color:var(--text-warm);}
+
+/* ---------- SCREEN A (sharing) ---------- */
+#screen-share{background:var(--bg-deep);}
+.share-status-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px;
+}
+.pulse-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-panel);
+  border:1px solid var(--border-soft);
+  border-radius:100px;
+  padding:8px 14px 8px 10px;
+  font-size:13.5px;
+  font-weight:600;
+}
+.pulse-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--accent-amber);
+  box-shadow:0 0 0 0 var(--accent-amber-glow);
+  animation:pulseDot 1.8s ease-out infinite;
+}
+.pulse-dot.stopped{background:var(--text-muted);animation:none;box-shadow:none;}
+@keyframes pulseDot{
+  0%{box-shadow:0 0 0 0 var(--accent-amber-glow);}
+  70%{box-shadow:0 0 0 10px rgba(240,169,78,0);}
+  100%{box-shadow:0 0 0 0 rgba(240,169,78,0);}
+}
+.timer{font-family:var(--font-mono);color:var(--text-muted);font-size:13px;}
+
+#map-share{flex:1;min-height:220px;}
+
+.share-panel{
+  padding:18px 16px 26px;
+  background:var(--bg-deep-2);
+  border-top:1px solid var(--border-soft);
+}
+.share-note{
+  font-size:13px;color:var(--text-muted);line-height:1.55;margin:0 0 16px;
+  background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:12px;padding:12px 14px;
+}
+.big-btn{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:16px;
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:15.5px;
+  cursor:pointer;
+  transition:transform .15s ease, filter .15s ease;
+}
+.big-btn:active{transform:scale(.98);}
+.btn-amber{background:linear-gradient(180deg,var(--accent-amber-soft),var(--accent-amber));color:#2a1c05;}
+.btn-amber:hover{filter:brightness(1.06);}
+.btn-ghost{background:var(--bg-panel-3);color:var(--text-warm);border:1px solid var(--border-soft);}
+.btn-ghost:hover{border-color:var(--accent-amber);}
+
+.perm-block{
+  margin:auto;padding:32px 24px;text-align:center;max-width:360px;
+}
+.perm-block .emoji-big{font-size:44px;display:block;margin-bottom:14px;}
+.perm-block p{color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:20px;}
+
+/* ---------- SCREEN B (watching) ---------- */
+#screen-watch{background:var(--bg-deep);position:relative;}
+#map-watch{flex:1;min-height:0;}
+
+.arrival-board{
+  position:relative;
+  background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-deep-2) 100%);
+  border-top:1px solid var(--border-soft);
+  padding:18px 18px 26px;
+  z-index:15;
+}
+.board-eyebrow{
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--text-muted);font-weight:600;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);}
+.status-dot.on-the-way{background:var(--accent-amber);box-shadow:0 0 8px var(--accent-amber-glow);}
+.status-dot.arriving{background:var(--accent-amber-soft);animation:pulseDot 1.2s ease-out infinite;}
+.status-dot.arrived{background:var(--success-sage);box-shadow:0 0 10px var(--success-glow);}
+.status-dot.stale{background:var(--danger-soft);}
+
+.board-main{display:flex;align-items:flex-end;gap:22px;margin-bottom:6px;flex-wrap:wrap;}
+.board-metric{display:flex;flex-direction:column;gap:2px;}
+.board-metric .label{font-size:11px;color:var(--text-muted);letter-spacing:.04em;}
+.board-value{
+  font-family:var(--font-mono);
+  font-weight:600;
+  font-size:32px;
+  letter-spacing:.02em;
+  color:var(--accent-amber-soft);
+  text-shadow:0 0 22px rgba(240,169,78,.25);
+}
+.board-value.small{font-size:22px;color:var(--text-warm);text-shadow:none;}
+.board-value.sage{color:var(--success-sage);text-shadow:0 0 22px var(--success-glow);}
+
+.board-status-text{font-size:14px;color:var(--text-muted);margin-top:8px;line-height:1.5;}
+.board-status-text.arrived{color:var(--success-sage);font-weight:600;}
+
+.board-hint{
+  font-size:12px;color:var(--text-muted);margin-top:12px;
+  border-top:1px dashed var(--border-soft);padding-top:12px;
+}
+
+/* Leaflet overrides */
+.leaflet-container{background:#0c1424;font-family:var(--font-body);}
+.leaflet-control-attribution{
+  background:rgba(12,18,32,.75) !important;
+  color:var(--text-muted) !important;
+  font-size:9.5px !important;
+}
+.leaflet-control-attribution a{color:var(--route-lavender) !important;}
+.leaflet-control-zoom a{
+  background:var(--bg-panel) !important;color:var(--text-warm) !important;border-color:var(--border-soft) !important;
+}
+
+.marker-a-wrap{position:relative;width:26px;height:26px;}
+.marker-a-dot{
+  position:absolute;top:7px;left:7px;width:12px;height:12px;border-radius:50%;
+  background:var(--accent-amber);border:2px solid var(--text-warm);
+  box-shadow:0 0 10px 3px var(--accent-amber-glow);
+}
+.marker-a-ring{
+  position:absolute;inset:0;border-radius:50%;border:2px solid var(--accent-amber);
+  animation:ringOut 1.8s ease-out infinite;
+}
+@keyframes ringOut{0%{transform:scale(.45);opacity:.9;}100%{transform:scale(1.15);opacity:0;}}
+
+.marker-home-wrap{position:relative;width:36px;height:44px;display:flex;flex-direction:column;align-items:center;}
+.marker-home-glow{
+  position:absolute;top:2px;width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle, var(--accent-amber-glow) 0%, rgba(240,169,78,0) 70%);
+  filter:blur(1px);
+}
+.marker-home-glow.close{background:radial-gradient(circle, var(--success-glow) 0%, rgba(163,199,141,0) 70%);}
+.marker-home-icon{position:relative;font-size:22px;line-height:1;margin-top:4px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));}
+
+.empty-state{
+  margin:auto;text-align:center;padding:40px 26px;max-width:340px;color:var(--text-muted);
+}
+.empty-state .emoji-big{font-size:40px;display:block;margin-bottom:12px;}
+.empty-state p{font-size:14px;line-height:1.6;}
+
+.toast{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--bg-panel-3);border:1px solid var(--border-soft);
+  color:var(--text-warm);font-size:13px;padding:10px 16px;border-radius:10px;
+  z-index:60;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;
+  box-shadow:0 10px 30px -10px rgba(0,0,0,.6);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (min-width:640px){
+  #screen-watch{align-items:center;}
+  .watch-inner{max-width:520px;width:100%;margin:0 auto;height:100vh;display:flex;flex-direction:column;box-shadow:0 0 60px rgba(0,0,0,.5);}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= SETUP SCREEN ================= -->
+  <section id="screen-setup" class="screen active">
+    <div class="setup-wrap">
+      <div id="resume-strip-holder"></div>
+
+      <h1 class="wordmark">otw<span class="dot">.</span></h1>
+      <p class="tagline">Satu titik cahaya yang sedang menuju kamu.</p>
+
+      <div class="card">
+        <label class="field-label" for="kode-input">Kode pasangan</label>
+        <input id="kode-input" type="text" placeholder="contoh: RUMAH-JINGGA" maxlength="24" autocomplete="off" autocapitalize="characters" />
+        <p class="field-help">Buat kode sendiri lalu kirim ke pasanganmu lewat chat. Siapa pun yang tahu kode ini bisa melihat lokasinya — pilih yang unik, jangan disebar sembarangan.</p>
+
+        <div class="role-row">
+          <button class="role-btn" id="btn-role-a">
+            <span class="emoji">🚗</span>
+            Aku yang otw
+          </button>
+          <button class="role-btn" id="btn-role-b">
+            <span class="emoji">🏠</span>
+            Aku yang nunggu
+          </button>
+        </div>
+      </div>
+
+      <p class="setup-footnote">Butuh izin akses lokasi dari browser. Bisa langsung dipakai dari HP tanpa install apa pun — tambahkan ke <b>Layar Utama</b> biar terasa seperti aplikasi asli.</p>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN A — SHARING ================= -->
+  <section id="screen-share" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="topbar-code" id="share-code-label">—</span>
+      </div>
+      <button class="link-btn" id="btn-a-back">Ganti kode</button>
+    </div>
+
+    <div class="share-status-row">
+      <div class="pulse-pill">
+        <span class="pulse-dot" id="a-pulse-dot"></span>
+        <span id="a-status-text">Menyiapkan…</span>
+      </div>
+      <span class="timer" id="a-timer">00:00</span>
+    </div>
+
+    <div id="map-share" style="display:none;"></div>
+
+    <div id="a-permission-block" class="perm-block">
+      <span class="emoji-big">📍</span>
+      <p>Untuk mulai berbagi, izinkan browser mengakses lokasimu. Posisi hanya terkirim ke pasangan yang tahu kode ini.</p>
+      <button class="big-btn btn-amber" id="btn-request-location">Izinkan &amp; mulai berbagi</button>
+    </div>
+
+    <div class="share-panel" id="a-share-panel" style="display:none;">
+      <p class="share-note">Lokasi terkirim otomatis tiap beberapa detik. Biarkan halaman ini tetap terbuka selama perjalanan supaya posisimu terus update.</p>
+      <button class="big-btn btn-ghost" id="btn-stop-share">Berhenti berbagi</button>
+    </div>
+  </section>
+
+  <!-- ================= SCREEN B — WATCHING ================= -->
+  <section id="screen-watch" class="screen">
+    <div class="watch-inner">
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="topbar-code" id="watch-code-label">—</span>
+        </div>
+        <button class="link-btn" id="btn-b-back">Ganti kode</button>
+      </div>
+
+      <div id="map-watch"></div>
+
+      <div class="arrival-board">
+        <div class="board-eyebrow"><span class="status-dot" id="board-status-dot"></span> Papan kedatangan</div>
+        <div class="board-main">
+          <div class="board-metric">
+            <span class="label">ESTIMASI TIBA</span>
+            <span class="board-value" id="board-eta">—</span>
+          </div>
+          <div class="board-metric">
+            <span class="label">JARAK</span>
+            <span class="board-value small" id="board-distance">—</span>
+          </div>
+        </div>
+        <p class="board-status-text" id="board-status-text">Menunggu pasanganmu mulai berbagi lokasi…</p>
+        <p class="board-hint" id="board-hint">Geser pin 🏠 di peta kalau posisi itu bukan tempatmu menunggu.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- FIREBASE CONFIG -----------------
+     Ganti seluruh objek di bawah ini dengan config dari
+     Firebase Console punyamu sendiri.
+     Project Settings -> General -> "Your apps" -> SDK setup and configuration
+     ---------------------------------------------------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyD_FPYrllN9AGVvee-Nw-s5Arofcm2yGzc",
+    authDomain: "otw-tracker.firebaseapp.com",
+    databaseURL: "https://otw-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "otw-tracker",
+    storageBucket: "otw-tracker.firebasestorage.app",
+    messagingSenderId: "192437240181",
+    appId: "1:192437240181:web:a6f64261fd58393586933c"
+  };
+
+  let fbReady = false;
+  let db = null;
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    fbReady = true;
+  }catch(e){
+    console.error("Firebase gagal diinisialisasi. Cek firebaseConfig di atas.", e);
+  }
+
+  function showConfigWarningIfNeeded(){
+    if(!fbReady || firebaseConfig.apiKey === "GANTI_DENGAN_API_KEY"){
+      const el = document.getElementById("toast");
+      el.textContent = "⚠️ Firebase belum dikonfigurasi — lihat README.md";
+      el.classList.add("show");
+      return true;
+    }
+    return false;
+  }
+
+  /* ---------------- storage helpers (Firebase Realtime Database) ---------------- */
+  async function fbGetOnce(path){
+    if(!fbReady) return null;
+    try{
+      const snap = await db.ref(path).once("value");
+      return snap.exists() ? snap.val() : null;
+    }catch(e){
+      console.error("fbGetOnce failed", path, e);
+      return null;
+    }
+  }
+  async function fbSet(path, value){
+    if(!fbReady) return false;
+    try{
+      await db.ref(path).set(value);
+      return true;
+    }catch(e){
+      console.error("fbSet failed", path, e);
+      return false;
+    }
+  }
+  function fbListen(path, cb){
+    if(!fbReady) return null;
+    const handler = db.ref(path).on("value", snap => cb(snap.exists() ? snap.val() : null));
+    return handler;
+  }
+  function fbUnlisten(path, handler){
+    if(!fbReady || !handler) return;
+    db.ref(path).off("value", handler);
+  }
+
+  /* ---------------- sesi lokal (device ini saja, pakai localStorage) ---------------- */
+  function localGet(key){
+    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
+  }
+  function localSet(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* abaikan */ }
+  }
+  function localClear(key){
+    try{ localStorage.removeItem(key); }catch(e){ /* abaikan */ }
+  }
+
+  /* ---------------- small utils ---------------- */
+  function toast(msg){
+    const el = document.getElementById("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>el.classList.remove("show"), 2600);
+  }
+
+  function haversine(lat1, lng1, lat2, lng2){
+    const R = 6371000;
+    const toRad = d => d * Math.PI/180;
+    const dLat = toRad(lat2-lat1);
+    const dLng = toRad(lng2-lng1);
+    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+
+  function fmtDistance(m){
+    if(m == null) return "—";
+    if(m < 1000) return Math.round(m/10)*10 + " m";
+    return (m/1000).toFixed(1) + " km";
+  }
+
+  function fmtDuration(sec){
+    if(sec == null) return "—";
+    if(sec < 60) return "< 1 mnt";
+    const mnt = Math.round(sec/60);
+    if(mnt < 60) return "~" + mnt + " mnt";
+    const jam = Math.floor(mnt/60);
+    const sisa = mnt % 60;
+    return "~" + jam + "j " + sisa + "m";
+  }
+
+  function normalizeCode(raw){
+    return (raw||"").trim().toUpperCase().replace(/\s+/g,"-").slice(0,24);
+  }
+
+  /* ---------------- navigation ---------------- */
+  const screens = {
+    setup: document.getElementById("screen-setup"),
+    share: document.getElementById("screen-share"),
+    watch: document.getElementById("screen-watch"),
+  };
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove("active"));
+    screens[name].classList.add("active");
+  }
+
+  /* ---------------- session resume (device lokal, pakai localStorage) ---------------- */
+  function trySavedSession(){
+    const last = localGet("otw-last-session");
+    if(last && last.code && last.role){
+      const holder = document.getElementById("resume-strip-holder");
+      const strip = document.createElement("div");
+      strip.className = "resume-strip";
+      strip.innerHTML =
+        '<span>Lanjutkan sebagai <b style="color:var(--accent-amber-soft)">' +
+        (last.role === "a" ? "yang otw" : "yang nunggu") +
+        '</b> — kode <b style="color:var(--accent-amber-soft)">' + last.code + '</b>?</span>' +
+        '<button id="resume-btn">Lanjut</button>';
+      holder.appendChild(strip);
+      document.getElementById("resume-btn").addEventListener("click", ()=>{
+        document.getElementById("kode-input").value = last.code;
+        if(last.role === "a") startShare(last.code); else startWatch(last.code);
+      });
+    }
+  }
+  function saveSession(code, role){
+    localSet("otw-last-session", {code, role});
+  }
+  function clearSession(){
+    localClear("otw-last-session");
+  }
+
+  /* ================= SETUP SCREEN LOGIC ================= */
+  const kodeInput = document.getElementById("kode-input");
+  document.getElementById("btn-role-a").addEventListener("click", ()=>{
+    const code = normalizeCode(kodeInput.value);
+    if(!code){ toast("Isi kode pasangan dulu ya"); kodeInput.focus(); return; }
+    startShare(code);
+  });
+  document.getElementById("btn-role-b").addEventListener("click", ()=>{
+    const code = normalizeCode(kodeInput.value);
+    if(!code){ toast("Isi kode pasangan dulu ya"); kodeInput.focus(); return; }
+    startWatch(code);
+  });
+
+  /* ================= SCREEN A — SHARING ================= */
+  let watchId = null;
+  let shareTimerInt = null;
+  let shareStartTs = null;
+  let lastWriteTs = 0;
+  let lastWritePos = null;
+  let mapA = null, markerA = null;
+
+  function startShare(code){
+    document.getElementById("share-code-label").textContent = code;
+    saveSession(code, "a");
+    showScreen("share");
+    resetShareUI();
+  }
+
+  function resetShareUI(){
+    document.getElementById("a-permission-block").style.display = "block";
+    document.getElementById("map-share").style.display = "none";
+    document.getElementById("a-share-panel").style.display = "none";
+    document.getElementById("a-status-text").textContent = "Menyiapkan…";
+    document.getElementById("a-pulse-dot").classList.add("stopped");
+  }
+
+  document.getElementById("btn-request-location").addEventListener("click", requestLocationAndShare);
+
+  function requestLocationAndShare(){
+    if(showConfigWarningIfNeeded()) return;
+    if(!("geolocation" in navigator)){
+      toast("Browser ini tidak mendukung akses lokasi");
+      return;
+    }
+    document.getElementById("a-status-text").textContent = "Meminta izin lokasi…";
+
+    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
+      enableHighAccuracy: true,
+      maximumAge: 4000,
+      timeout: 15000,
+    });
+  }
+
+  function ensureMapA(){
+    if(mapA) return;
+    document.getElementById("map-share").style.display = "block";
+    mapA = L.map("map-share", {zoomControl:true, attributionControl:true}).setView([-2.5, 118], 5);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(mapA);
+    const icon = L.divIcon({className:"", html:'<div class="marker-a-wrap"><div class="marker-a-ring"></div><div class="marker-a-dot"></div></div>', iconSize:[26,26], iconAnchor:[13,13]});
+    markerA = L.marker([-2.5,118], {icon}).addTo(mapA);
+  }
+
+  function onPosition(pos){
+    const {latitude, longitude, accuracy, heading, speed} = pos.coords;
+    document.getElementById("a-permission-block").style.display = "none";
+    document.getElementById("a-share-panel").style.display = "block";
+    document.getElementById("a-pulse-dot").classList.remove("stopped");
+    document.getElementById("a-status-text").textContent = "Berbagi aktif";
+
+    if(!shareStartTs){
+      shareStartTs = Date.now();
+      shareTimerInt = setInterval(updateShareTimer, 1000);
+    }
+
+    ensureMapA();
+    markerA.setLatLng([latitude, longitude]);
+    if(!onPosition._centered){ mapA.setView([latitude, longitude], 15); onPosition._centered = true; }
+
+    const now = Date.now();
+    const movedEnough = !lastWritePos || haversine(lastWritePos[0], lastWritePos[1], latitude, longitude) > 12;
+    const timeEnough = now - lastWriteTs > 4000;
+    if(movedEnough || timeEnough){
+      lastWriteTs = now;
+      lastWritePos = [latitude, longitude];
+      const code = document.getElementById("share-code-label").textContent;
+      fbSet("pairs/" + code + "/location", {
+        lat: latitude, lng: longitude, accuracy, heading: heading||null, speed: speed||null, ts: now
+      });
+    }
+  }
+
+  function onPositionError(err){
+    document.getElementById("a-status-text").textContent = "Izin lokasi ditolak/gagal";
+    document.getElementById("a-permission-block").style.display = "block";
+    document.getElementById("map-share").style.display = "none";
+    document.getElementById("a-share-panel").style.display = "none";
+    const p = document.querySelector("#a-permission-block p");
+    p.textContent = "Lokasi belum aktif (" + (err.message || "izin ditolak") + "). Aktifkan izin lokasi di pengaturan browser, lalu coba lagi.";
+  }
+
+  function updateShareTimer(){
+    const sec = Math.floor((Date.now() - shareStartTs)/1000);
+    const mm = String(Math.floor(sec/60)).padStart(2,"0");
+    const ss = String(sec%60).padStart(2,"0");
+    document.getElementById("a-timer").textContent = mm + ":" + ss;
+  }
+
+  document.getElementById("btn-stop-share").addEventListener("click", ()=>{
+    stopSharing();
+    clearSession();
+    showScreen("setup");
+  });
+  document.getElementById("btn-a-back").addEventListener("click", ()=>{
+    stopSharing();
+    clearSession();
+    showScreen("setup");
+  });
+
+  function stopSharing(){
+    if(watchId != null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+    if(shareTimerInt){ clearInterval(shareTimerInt); shareTimerInt = null; }
+    shareStartTs = null;
+    onPosition._centered = false;
+    const code = document.getElementById("share-code-label").textContent;
+    if(code && code !== "—"){
+      fbSet("pairs/" + code + "/stopped", {ts: Date.now()});
+    }
+  }
+
+  /* ================= SCREEN B — WATCHING ================= */
+  let mapB = null, markerAonB = null, markerHome = null, routeLine = null;
+  let trailPolylines = [];
+  let trailPoints = [];
+  let routePollInt = null;
+  let destLatLng = null;
+  let lastKnownLoc = null;
+  let currentStopped = null;
+  let currentCodeB = null;
+  let locationHandler = null, stoppedHandler = null;
+
+  function startWatch(code){
+    if(showConfigWarningIfNeeded()) return;
+    currentCodeB = code;
+    document.getElementById("watch-code-label").textContent = code;
+    saveSession(code, "b");
+    showScreen("watch");
+    initMapB();
+    setTimeout(()=>{ if(mapB) mapB.invalidateSize(); }, 60);
+    tryAutoDestination();
+
+    locationHandler = fbListen("pairs/" + code + "/location", (loc)=>{
+      lastKnownLoc = loc;
+      recomputeWatchState();
+    });
+    stoppedHandler = fbListen("pairs/" + code + "/stopped", (stopped)=>{
+      currentStopped = stopped;
+      recomputeWatchState();
+    });
+
+    routePollInt = setInterval(refreshRoute, 15000);
+  }
+
+  function initMapB(){
+    if(mapB) return;
+    mapB = L.map("map-watch", {zoomControl:true}).setView([-2.5, 118], 5);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(mapB);
+
+    const homeIcon = L.divIcon({
+      className:"", iconSize:[36,44], iconAnchor:[18,38],
+      html:'<div class="marker-home-wrap"><div class="marker-home-glow" id="home-glow"></div><div class="marker-home-icon">🏠</div></div>'
+    });
+    markerHome = L.marker([-2.5,118], {icon: homeIcon, draggable:true}).addTo(mapB);
+    markerHome.on("dragend", ()=>{
+      const ll = markerHome.getLatLng();
+      destLatLng = [ll.lat, ll.lng];
+      fbSet("pairs/" + currentCodeB + "/destination", {lat: ll.lat, lng: ll.lng, ts: Date.now()});
+      refreshRoute();
+    });
+
+    const aIcon = L.divIcon({className:"", html:'<div class="marker-a-wrap"><div class="marker-a-ring"></div><div class="marker-a-dot"></div></div>', iconSize:[26,26], iconAnchor:[13,13]});
+    markerAonB = L.marker([-2.5,118], {icon: aIcon, opacity:0}).addTo(mapB);
+  }
+
+  async function tryAutoDestination(){
+    const saved = await fbGetOnce("pairs/" + currentCodeB + "/destination");
+    if(saved){
+      destLatLng = [saved.lat, saved.lng];
+      markerHome.setLatLng(destLatLng);
+      mapB.setView(destLatLng, 14);
+      return;
+    }
+    if("geolocation" in navigator){
+      navigator.geolocation.getCurrentPosition((pos)=>{
+        destLatLng = [pos.coords.latitude, pos.coords.longitude];
+        markerHome.setLatLng(destLatLng);
+        mapB.setView(destLatLng, 14);
+        fbSet("pairs/" + currentCodeB + "/destination", {lat: destLatLng[0], lng: destLatLng[1], ts: Date.now()});
+      }, ()=>{ /* biarkan user geser pin manual */ }, {enableHighAccuracy:true, timeout:8000});
+    }
+  }
+
+  /* Dipanggil setiap kali listener lokasi ATAU status "stopped" berubah dari Firebase */
+  function recomputeWatchState(){
+    const loc = lastKnownLoc;
+    const stopped = currentStopped;
+
+    if(!loc){
+      setBoardState("empty");
+      return;
+    }
+    if(stopped && stopped.ts > loc.ts){
+      setBoardState("stopped-share");
+      return;
+    }
+
+    const isFresh = (Date.now() - loc.ts) < 90000;
+
+    markerAonB.setOpacity(isFresh ? 1 : 0.35);
+    markerAonB.setLatLng([loc.lat, loc.lng]);
+
+    pushTrail([loc.lat, loc.lng]);
+
+    if(markerAonB._firstShown !== true){
+      markerAonB._firstShown = true;
+      if(destLatLng){
+        mapB.fitBounds(L.latLngBounds([loc.lat, loc.lng], destLatLng), {padding:[50,50]});
+      } else {
+        mapB.setView([loc.lat, loc.lng], 14);
+      }
+    }
+
+    let dist = null;
+    if(destLatLng){
+      dist = haversine(loc.lat, loc.lng, destLatLng[0], destLatLng[1]);
+    }
+
+    updateBoard(dist, isFresh, loc.ts);
+
+    const glow = document.getElementById("home-glow");
+    if(glow){
+      glow.classList.toggle("close", dist != null && dist < 500);
+    }
+  }
+
+  function pushTrail(latlng){
+    const last = trailPoints[trailPoints.length-1];
+    if(last && haversine(last[0],last[1],latlng[0],latlng[1]) < 8) return;
+    trailPoints.push(latlng);
+    if(trailPoints.length > 18) trailPoints.shift();
+    drawTrail();
+  }
+
+  function drawTrail(){
+    trailPolylines.forEach(pl => mapB.removeLayer(pl));
+    trailPolylines = [];
+    for(let i=1;i<trailPoints.length;i++){
+      const opacity = 0.08 + (i/trailPoints.length)*0.4;
+      const pl = L.polyline([trailPoints[i-1], trailPoints[i]], {
+        color: "#f0a94e",
+        weight: 3, opacity, lineCap:"round"
+      }).addTo(mapB);
+      trailPolylines.push(pl);
+    }
+  }
+
+  let routeAbort = null;
+  async function refreshRoute(){
+    if(!lastKnownLoc || !destLatLng) return;
+    if(routeAbort) routeAbort.abort();
+    routeAbort = new AbortController();
+    const url = "https://router.project-osrm.org/route/v1/driving/" +
+      lastKnownLoc.lng + "," + lastKnownLoc.lat + ";" + destLatLng[1] + "," + destLatLng[0] +
+      "?overview=full&geometries=geojson";
+    try{
+      const res = await fetch(url, {signal: routeAbort.signal});
+      const data = await res.json();
+      if(data && data.routes && data.routes[0]){
+        const r = data.routes[0];
+        const coords = r.geometry.coordinates.map(c => [c[1], c[0]]);
+        if(routeLine) mapB.removeLayer(routeLine);
+        routeLine = L.polyline(coords, {color:"#8ea6e0", weight:3, opacity:.65, dashArray:"1,9", lineCap:"round"}).addTo(mapB);
+        window.__lastRouteMeta = {distance: r.distance, duration: r.duration, ts: Date.now()};
+        renderBoardMetrics(r.distance, r.duration, true);
+      }
+    }catch(e){
+      /* fallback ke garis lurus, biarkan estimasi jarak manual yang dipakai */
+    }
+  }
+
+  function setBoardState(state){
+    const dot = document.getElementById("board-status-dot");
+    const txt = document.getElementById("board-status-text");
+    const eta = document.getElementById("board-eta");
+    const distEl = document.getElementById("board-distance");
+    dot.className = "status-dot";
+    eta.className = "board-value";
+    if(state === "empty"){
+      txt.className = "board-status-text";
+      txt.textContent = "Menunggu pasanganmu mulai berbagi lokasi…";
+      eta.textContent = "—"; distEl.textContent = "—";
+    } else if(state === "stopped-share"){
+      dot.classList.add("stale");
+      txt.className = "board-status-text";
+      txt.textContent = "Berbagi lokasi dihentikan dari sisi pasanganmu.";
+      eta.textContent = "—"; distEl.textContent = "—";
+    }
+  }
+
+  function updateBoard(dist, isFresh, ts){
+    const dot = document.getElementById("board-status-dot");
+    const txt = document.getElementById("board-status-text");
+    const distEl = document.getElementById("board-distance");
+    const eta = document.getElementById("board-eta");
+
+    dot.className = "status-dot";
+    eta.className = "board-value";
+
+    if(!isFresh){
+      dot.classList.add("stale");
+      const mnt = Math.round((Date.now()-ts)/60000);
+      txt.className = "board-status-text";
+      txt.textContent = "Sinyal terakhir " + (mnt<1 ? "baru saja" : mnt + " menit lalu") + ". Menunggu update…";
+    }
+
+    distEl.textContent = fmtDistance(dist);
+
+    if(dist == null){
+      dot.classList.add("on-the-way");
+      txt.textContent = "Melacak posisi…";
+      eta.textContent = "—";
+      return;
+    }
+
+    if(dist < 100){
+      dot.classList.add("arrived");
+      eta.className = "board-value sage";
+      eta.textContent = "Tiba";
+      txt.className = "board-status-text arrived";
+      txt.textContent = "Sudah tiba! 🎉";
+      celebrateIfNeeded();
+    } else if(dist < 500){
+      dot.classList.add("arriving");
+      txt.className = "board-status-text";
+      txt.textContent = isFresh ? "Hampir sampai — bersiap ya!" : txt.textContent;
+      if(!window.__lastRouteMeta || Date.now()-window.__lastRouteMeta.ts > 20000){
+        eta.textContent = fmtDuration(dist/6.5); // asumsi jalan kaki/pelan saat dekat
+      }
+    } else {
+      dot.classList.add("on-the-way");
+      if(isFresh){ txt.className = "board-status-text"; txt.textContent = "Sedang di jalan menuju kesini."; }
+      if(!window.__lastRouteMeta || Date.now()-window.__lastRouteMeta.ts > 20000){
+        eta.textContent = fmtDuration(dist/8.3); // fallback ~30km/jam
+      }
+    }
+  }
+
+  function renderBoardMetrics(distanceM, durationS, fromRoute){
+    const distEl = document.getElementById("board-distance");
+    const eta = document.getElementById("board-eta");
+    if(distanceM != null) distEl.textContent = fmtDistance(distanceM);
+    if(durationS != null && distanceM > 100) eta.textContent = fmtDuration(durationS);
+  }
+
+  let celebrated = false;
+  function celebrateIfNeeded(){
+    if(celebrated) return;
+    celebrated = true;
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = 720;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.08, ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+0.5);
+      o.start(); o.stop(ctx.currentTime+0.55);
+    }catch(e){/* audio tidak tersedia, abaikan */}
+    if("Notification" in window && Notification.permission === "granted"){
+      try{ new Notification("otw.", {body:"Pasanganmu sudah tiba! 🎉"}); }catch(e){}
+    }
+  }
+
+  function stopWatching(){
+    if(currentCodeB){
+      if(locationHandler) fbUnlisten("pairs/" + currentCodeB + "/location", locationHandler);
+      if(stoppedHandler) fbUnlisten("pairs/" + currentCodeB + "/stopped", stoppedHandler);
+    }
+    locationHandler = null; stoppedHandler = null;
+    if(routePollInt){ clearInterval(routePollInt); routePollInt = null; }
+    trailPoints = [];
+    celebrated = false;
+    window.__lastRouteMeta = null;
+    lastKnownLoc = null;
+    currentStopped = null;
+  }
+
+  document.getElementById("btn-b-back").addEventListener("click", ()=>{
+    stopWatching();
+    clearSession();
+    showScreen("setup");
+  });
+
+  /* ---------------- init ---------------- */
+  trySavedSession();
+})();
+</script>
+</body>
+</html>
