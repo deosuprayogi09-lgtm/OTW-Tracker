@@ -596,19 +596,9 @@ input{font-family:inherit;}
   function trySavedSession(){
     const last = localGet("otw-last-session");
     if(last && last.code && last.role){
-      const holder = document.getElementById("resume-strip-holder");
-      const strip = document.createElement("div");
-      strip.className = "resume-strip";
-      strip.innerHTML =
-        '<span>Lanjutkan sebagai <b style="color:var(--accent-amber-soft)">' +
-        (last.role === "a" ? "yang otw" : "yang nunggu") +
-        '</b> — kode <b style="color:var(--accent-amber-soft)">' + last.code + '</b>?</span>' +
-        '<button id="resume-btn">Lanjut</button>';
-      holder.appendChild(strip);
-      document.getElementById("resume-btn").addEventListener("click", ()=>{
-        document.getElementById("kode-input").value = last.code;
-        if(last.role === "a") startShare(last.code); else startWatch(last.code);
-      });
+      // Langsung lanjut otomatis — tidak perlu tap konfirmasi atau isi kode lagi.
+      // Ganti kode/peran tetap bisa lewat link "Ganti kode" di layar berikutnya.
+      if(last.role === "a") startShare(last.code); else startWatch(last.code);
     }
   }
   function saveSession(code, role){
@@ -637,7 +627,9 @@ input{font-family:inherit;}
   let shareStartTs = null;
   let lastWriteTs = 0;
   let lastWritePos = null;
-  let mapA = null, markerA = null;
+  let lastAcceptedPos = null;
+  let lastAcceptedTs = null;
+  let mapA = null, markerA = null, accuracyCircleA = null;
 
   function startShare(code){
     document.getElementById("share-code-label").textContent = code;
@@ -652,6 +644,8 @@ input{font-family:inherit;}
     document.getElementById("a-share-panel").style.display = "none";
     document.getElementById("a-status-text").textContent = "Menyiapkan…";
     document.getElementById("a-pulse-dot").classList.add("stopped");
+    lastAcceptedPos = null;
+    lastAcceptedTs = null;
   }
 
   document.getElementById("btn-request-location").addEventListener("click", requestLocationAndShare);
@@ -666,8 +660,8 @@ input{font-family:inherit;}
 
     watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
       enableHighAccuracy: true,
-      maximumAge: 4000,
-      timeout: 15000,
+      maximumAge: 2000,
+      timeout: 20000,
     });
   }
 
@@ -681,14 +675,16 @@ input{font-family:inherit;}
     }).addTo(mapA);
     const icon = L.divIcon({className:"", html:'<div class="marker-a-wrap"><div class="marker-a-ring"></div><div class="marker-a-dot"></div></div>', iconSize:[26,26], iconAnchor:[13,13]});
     markerA = L.marker([-2.5,118], {icon}).addTo(mapA);
+    accuracyCircleA = L.circle([-2.5,118], {radius:0, color:"#f0a94e", weight:1, opacity:.35, fillColor:"#f0a94e", fillOpacity:.08}).addTo(mapA);
   }
 
   function onPosition(pos){
     const {latitude, longitude, accuracy, heading, speed} = pos.coords;
+    const now = Date.now();
+
     document.getElementById("a-permission-block").style.display = "none";
     document.getElementById("a-share-panel").style.display = "block";
     document.getElementById("a-pulse-dot").classList.remove("stopped");
-    document.getElementById("a-status-text").textContent = "Berbagi aktif";
 
     if(!shareStartTs){
       shareStartTs = Date.now();
@@ -697,11 +693,35 @@ input{font-family:inherit;}
 
     ensureMapA();
     markerA.setLatLng([latitude, longitude]);
-    if(!onPosition._centered){ mapA.setView([latitude, longitude], 15); onPosition._centered = true; }
+    accuracyCircleA.setLatLng([latitude, longitude]).setRadius(accuracy || 0);
+    if(!onPosition._centered){ mapA.setView([latitude, longitude], 16); onPosition._centered = true; }
 
-    const now = Date.now();
-    const movedEnough = !lastWritePos || haversine(lastWritePos[0], lastWritePos[1], latitude, longitude) > 12;
-    const timeEnough = now - lastWriteTs > 4000;
+    // Saring bacaan GPS yang jelek atau lompatan tidak wajar (glitch), demi presisi jalur.
+    let accepted = true;
+    if(accuracy && accuracy > 100 && lastAcceptedTs && (now - lastAcceptedTs) < 30000){
+      accepted = false; // masih ada fix bagus yang cukup baru, tunggu sinyal membaik
+    }
+    if(accepted && lastAcceptedPos){
+      const dist = haversine(lastAcceptedPos[0], lastAcceptedPos[1], latitude, longitude);
+      const dt = (now - lastAcceptedTs) / 1000;
+      const impliedSpeed = dt > 0 ? dist / dt : 0; // m/s
+      if(dt < 8 && impliedSpeed > 60){ // >216 km/jam dalam waktu singkat = kemungkinan glitch
+        accepted = false;
+      }
+    }
+
+    const akurasiTxt = accuracy ? " · akurasi ±" + Math.round(accuracy) + "m" : "";
+    document.getElementById("a-status-text").textContent = accepted
+      ? "Berbagi aktif" + akurasiTxt
+      : "Mencari sinyal lebih akurat…" + akurasiTxt;
+
+    if(!accepted) return;
+
+    lastAcceptedPos = [latitude, longitude];
+    lastAcceptedTs = now;
+
+    const movedEnough = !lastWritePos || haversine(lastWritePos[0], lastWritePos[1], latitude, longitude) > 6;
+    const timeEnough = now - lastWriteTs > 3000;
     if(movedEnough || timeEnough){
       lastWriteTs = now;
       lastWritePos = [latitude, longitude];
@@ -751,7 +771,7 @@ input{font-family:inherit;}
   }
 
   /* ================= SCREEN B — WATCHING ================= */
-  let mapB = null, markerAonB = null, markerHome = null, routeLine = null;
+  let mapB = null, markerAonB = null, markerHome = null, routeLine = null, accuracyCircleB = null;
   let trailPolylines = [];
   let trailPoints = [];
   let routePollInt = null;
@@ -805,6 +825,7 @@ input{font-family:inherit;}
 
     const aIcon = L.divIcon({className:"", html:'<div class="marker-a-wrap"><div class="marker-a-ring"></div><div class="marker-a-dot"></div></div>', iconSize:[26,26], iconAnchor:[13,13]});
     markerAonB = L.marker([-2.5,118], {icon: aIcon, opacity:0}).addTo(mapB);
+    accuracyCircleB = L.circle([-2.5,118], {radius:0, color:"#f0a94e", weight:1, opacity:.3, fillColor:"#f0a94e", fillOpacity:.07}).addTo(mapB);
   }
 
   async function tryAutoDestination(){
@@ -843,6 +864,10 @@ input{font-family:inherit;}
 
     markerAonB.setOpacity(isFresh ? 1 : 0.35);
     markerAonB.setLatLng([loc.lat, loc.lng]);
+    if(accuracyCircleB){
+      accuracyCircleB.setLatLng([loc.lat, loc.lng]).setRadius(loc.accuracy || 0);
+      accuracyCircleB.setStyle({opacity: isFresh ? 0.3 : 0.12, fillOpacity: isFresh ? 0.07 : 0.03});
+    }
 
     pushTrail([loc.lat, loc.lng]);
 
