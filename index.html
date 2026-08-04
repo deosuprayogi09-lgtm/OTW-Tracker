@@ -154,6 +154,7 @@ input,select{font-family:inherit;}
 .member-sub{font-size:12px;color:var(--text-muted);margin-top:1px;}
 .member-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
 .member-dot.live{background:var(--accent-amber);box-shadow:0 0 8px var(--accent-amber-glow);animation:pulseDot 1.8s ease-out infinite;}
+.member-dot.stale{background:var(--danger-soft);box-shadow:0 0 6px rgba(226,137,127,.5);}
 .member-dist{font-family:var(--font-mono);font-size:13px;color:var(--accent-amber-soft);font-weight:600;flex-shrink:0;}
 @keyframes pulseDot{0%{box-shadow:0 0 0 0 var(--accent-amber-glow);}70%{box-shadow:0 0 0 9px rgba(240,169,78,0);}100%{box-shadow:0 0 0 0 rgba(240,169,78,0);}}
 .empty-members{font-size:13px;color:var(--text-muted);text-align:center;padding:14px 4px;}
@@ -341,6 +342,23 @@ input,select{font-family:inherit;}
     return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   }
   function fmtDistance(m){ if(m==null) return "—"; if(m<1000) return Math.round(m/10)*10+" m"; return (m/1000).toFixed(1)+" km"; }
+  const STALE_AFTER_MS = 30000;   // >30 detik tanpa update -> dianggap "sinyal terlambat"
+  const DISCONNECT_AFTER_MS = 120000; // >2 menit tanpa update -> dianggap "kemungkinan terputus"
+  function staleLevelFor(ts){
+    const age = Date.now() - ts;
+    if(age > DISCONNECT_AFTER_MS) return "disconnected";
+    if(age > STALE_AFTER_MS) return "stale";
+    return "fresh";
+  }
+  function formatAgo(ts){
+    const s = Math.max(0, Math.round((Date.now()-ts)/1000));
+    if(s < 5) return "baru saja";
+    if(s < 60) return s + " dtk lalu";
+    const m = Math.round(s/60);
+    if(m < 60) return m + " mnt lalu";
+    const h = Math.round(m/60);
+    return h + " jam lalu";
+  }
   function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
   const PALETTE=["#f0a94e","#8ea6e0","#a3c78d","#e2897f","#c792ea","#4ecdc4","#ffcf6b","#7ee8fa","#ff9fb2","#b8e986"];
   function colorForId(id){ let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return PALETTE[h%PALETTE.length]; }
@@ -459,6 +477,28 @@ input,select{font-family:inherit;}
     });
 
     switchRoom(activeRoom);
+
+    // ticker: refresh label "X lalu" & status pudar/terputus tiap 10 detik,
+    // walau tidak ada data baru masuk (misal user baru buka lagi setelah 15 menit)
+    if(!staleTicker){
+      staleTicker = setInterval(()=>{
+        renderMembers();
+        refreshMarkerStaleness();
+      }, 10000);
+    }
+  }
+  let staleTicker = null;
+
+  function refreshMarkerStaleness(){
+    if(!mapRoom) return;
+    Object.keys(markers).forEach(id=>{
+      const loc = sharesData[id];
+      if(!loc) return;
+      const name = (membersData[id] && membersData[id].name) || "?";
+      const label = (id===USER_ID ? "Kamu" : name);
+      const color = colorForId(id);
+      markers[id].layer.setIcon(markerIcon(color, label, staleLevelFor(loc.ts), formatAgo(loc.ts)));
+    });
   }
 
   let myHomeRoom = null;
@@ -553,12 +593,21 @@ input,select{font-family:inherit;}
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(mapRoom);
   }
-  function markerIcon(color, label){
+  function markerIcon(color, label, staleLevel, agoText){
+    const isFresh = staleLevel === "fresh";
+    const isDisc = staleLevel === "disconnected";
+    const dispColor = isFresh ? color : "#7d8bab"; // pudar abu-abu kalau tidak fresh
+    const ringHtml = isFresh
+      ? '<div class="marker-dot-ring" style="border:2px solid '+dispColor+';"></div>'
+      : '';
+    const opacity = isDisc ? "0.55" : (staleLevel==="stale" ? "0.8" : "1");
+    const badge = isFresh ? "" : ' · '+(isDisc ? "⚠️ " : "")+agoText;
     return L.divIcon({
       className:"", iconSize:[26,26], iconAnchor:[13,13],
-      html: '<div class="marker-dot-wrap"><div class="marker-label">'+label+'</div>'+
-            '<div class="marker-dot-ring" style="border:2px solid '+color+';"></div>'+
-            '<div class="marker-dot-core" style="background:'+color+';box-shadow:0 0 10px 3px '+color+'88;"></div></div>'
+      html: '<div class="marker-dot-wrap" style="opacity:'+opacity+';">'+
+            '<div class="marker-label">'+label+badge+'</div>'+
+            ringHtml+
+            '<div class="marker-dot-core" style="background:'+dispColor+';box-shadow:0 0 10px 3px '+dispColor+'88;"></div></div>'
     });
   }
   const MARKER_ANIM_MS = 1400; // durasi "meluncur" dari posisi lama ke posisi baru
@@ -595,11 +644,13 @@ input,select{font-family:inherit;}
       const name = (membersData[id] && membersData[id].name) || "?";
       const label = (id===USER_ID ? "Kamu" : name);
       const color = colorForId(id);
+      const staleLevel = staleLevelFor(loc.ts);
+      const agoText = formatAgo(loc.ts);
       boundsPts.push([loc.lat, loc.lng]);
       if(!markers[id]){
-        markers[id] = { layer: L.marker([loc.lat, loc.lng], {icon: markerIcon(color, label)}).addTo(mapRoom), rafId: null };
+        markers[id] = { layer: L.marker([loc.lat, loc.lng], {icon: markerIcon(color, label, staleLevel, agoText)}).addTo(mapRoom), rafId: null };
       } else {
-        markers[id].layer.setIcon(markerIcon(color, label));
+        markers[id].layer.setIcon(markerIcon(color, label, staleLevel, agoText));
         animateMarkerTo(markers[id], loc.lat, loc.lng);
       }
     });
@@ -636,9 +687,19 @@ input,select{font-family:inherit;}
       const color = colorForId(id);
       let dotClass = "member-dot", subText = "Tidak sedang berbagi";
       if(share){
-        dotClass += " live";
         const remainMin = Math.max(0, Math.round((share.until-now)/60000));
-        subText = "Live · sisa " + remainMin + " mnt";
+        const staleLevel = staleLevelFor(share.ts);
+        const agoText = formatAgo(share.ts);
+        if(staleLevel === "disconnected"){
+          dotClass += " stale";
+          subText = "⚠️ Kemungkinan terputus · update " + agoText;
+        } else if(staleLevel === "stale"){
+          dotClass += " stale";
+          subText = "Sinyal terlambat · update " + agoText + " · sisa " + remainMin + " mnt";
+        } else {
+          dotClass += " live";
+          subText = "Live · update " + agoText + " · sisa " + remainMin + " mnt";
+        }
       }
       let distText = "—";
       if(!isMe && myShare && share) distText = fmtDistance(haversine(myShare.lat, myShare.lng, share.lat, share.lng));
