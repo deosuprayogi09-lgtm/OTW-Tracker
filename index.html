@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
-<title>otw. — berbagi lokasi bareng room</title>
+<title>otw. — live location bareng circle kamu</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
@@ -38,7 +38,7 @@ body{
   overflow-x:hidden;
 }
 button{font-family:inherit;}
-input{font-family:inherit;}
+input,select{font-family:inherit;}
 ::selection{background:var(--accent-amber-glow);}
 
 #app{position:relative;min-height:100vh;}
@@ -49,89 +49,35 @@ input{font-family:inherit;}
   *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
 }
 
-/* ---------- SETUP SCREEN ---------- */
-#screen-setup{align-items:center;justify-content:center;padding:32px 20px 40px;text-align:center;}
-.setup-wrap{max-width:420px;width:100%;}
-
+/* ---------- LOGIN SCREEN ---------- */
+#screen-login{align-items:center;justify-content:center;padding:32px 20px 40px;text-align:center;}
+.login-wrap{max-width:400px;width:100%;}
 .wordmark{
-  font-family:var(--font-display);
-  font-weight:700;
-  font-size:42px;
-  letter-spacing:-0.02em;
-  color:var(--text-warm);
-  margin:0 0 6px;
-  opacity:0;
-  animation:fadeUp .7s ease forwards;
+  font-family:var(--font-display);font-weight:700;font-size:42px;letter-spacing:-0.02em;
+  color:var(--text-warm);margin:0 0 6px;opacity:0;animation:fadeUp .7s ease forwards;
 }
-.wordmark .dot{
-  color:var(--accent-amber);
-  text-shadow:0 0 18px var(--accent-amber-glow), 0 0 40px var(--accent-amber-glow);
-}
-.tagline{
-  font-size:16px;
-  color:var(--text-muted);
-  margin:0 0 30px;
-  line-height:1.5;
-  opacity:0;
-  animation:fadeUp .7s ease .1s forwards;
-}
-
+.wordmark .dot{color:var(--accent-amber);text-shadow:0 0 18px var(--accent-amber-glow), 0 0 40px var(--accent-amber-glow);}
+.tagline{font-size:16px;color:var(--text-muted);margin:0 0 30px;line-height:1.5;opacity:0;animation:fadeUp .7s ease .1s forwards;}
 .card{
   background:linear-gradient(180deg, var(--bg-panel) 0%, var(--bg-panel-2) 100%);
-  border:1px solid var(--border-soft);
-  border-radius:20px;
-  padding:22px;
-  box-shadow:0 20px 50px -20px rgba(0,0,0,.6);
-  opacity:0;
-  animation:fadeUp .7s ease .2s forwards;
+  border:1px solid var(--border-soft);border-radius:20px;padding:22px;
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.6);opacity:0;animation:fadeUp .7s ease .2s forwards;
 }
-
-.field-label{
-  display:block;
-  text-align:left;
-  font-size:12px;
-  font-weight:600;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--text-muted);
-  margin-bottom:8px;
+.field-label{display:block;text-align:left;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px;}
+#username-input{
+  width:100%;background:var(--bg-deep-2);border:1.5px solid var(--border-soft);border-radius:12px;
+  padding:14px 16px;font-family:var(--font-mono);font-size:16px;letter-spacing:.04em;color:var(--text-warm);outline:none;transition:border-color .2s;
 }
-.field-label.mt{margin-top:18px;}
-#username-input, #kode-input{
-  width:100%;
-  background:var(--bg-deep-2);
-  border:1.5px solid var(--border-soft);
-  border-radius:12px;
-  padding:14px 16px;
-  font-family:var(--font-mono);
-  font-size:16px;
-  letter-spacing:.04em;
-  color:var(--text-warm);
-  outline:none;
-  transition:border-color .2s;
+#username-input::placeholder{color:#4c5a80;letter-spacing:normal;}
+#username-input:focus{border-color:var(--accent-amber);}
+.field-help{text-align:left;font-size:12.5px;color:var(--text-muted);margin:8px 2px 20px;line-height:1.5;}
+.invite-banner{
+  background:rgba(240,169,78,.1);border:1px solid rgba(240,169,78,.3);border-radius:12px;
+  padding:10px 12px;font-size:12.5px;color:var(--accent-amber-soft);margin-bottom:16px;text-align:left;line-height:1.5;
 }
-#kode-input{text-transform:uppercase;}
-#username-input::placeholder,#kode-input::placeholder{color:#4c5a80;text-transform:none;letter-spacing:normal;}
-#username-input:focus,#kode-input:focus{border-color:var(--accent-amber);}
-
-.field-help{
-  text-align:left;
-  font-size:12.5px;
-  color:var(--text-muted);
-  margin:8px 2px 20px;
-  line-height:1.5;
-}
-
 .big-btn{
-  width:100%;
-  border:none;
-  border-radius:14px;
-  padding:16px;
-  font-family:var(--font-display);
-  font-weight:600;
-  font-size:15.5px;
-  cursor:pointer;
-  transition:transform .15s ease, filter .15s ease;
+  width:100%;border:none;border-radius:14px;padding:16px;font-family:var(--font-display);font-weight:600;
+  font-size:15.5px;cursor:pointer;transition:transform .15s ease, filter .15s ease;
 }
 .big-btn:active{transform:scale(.98);}
 .big-btn:disabled{opacity:.45;cursor:not-allowed;}
@@ -139,202 +85,115 @@ input{font-family:inherit;}
 .btn-amber:hover{filter:brightness(1.06);}
 .btn-ghost{background:var(--bg-panel-3);color:var(--text-warm);border:1px solid var(--border-soft);}
 .btn-ghost:hover{border-color:var(--accent-amber);}
-
-.setup-footnote{
-  margin-top:22px;
-  font-size:12px;
-  color:var(--text-muted);
-  line-height:1.6;
-  opacity:0;
-  animation:fadeUp .7s ease .3s forwards;
-}
+.setup-footnote{margin-top:22px;font-size:12px;color:var(--text-muted);line-height:1.6;opacity:0;animation:fadeUp .7s ease .3s forwards;}
 .setup-footnote b{color:var(--accent-amber-soft);font-weight:600;}
-
-.or-divider{
-  display:flex;align-items:center;gap:10px;
-  margin:18px 0 14px;
-  color:var(--text-muted);
-  font-size:11px;letter-spacing:.08em;text-transform:uppercase;
-}
-.or-divider::before,.or-divider::after{
-  content:"";flex:1;height:1px;background:var(--border-soft);
-}
-
-.share-link-result{
-  display:flex;gap:8px;margin-top:12px;
-}
-.share-link-result input{
-  flex:1;min-width:0;
-  background:var(--bg-deep-2);
-  border:1.5px solid var(--border-soft);
-  border-radius:10px;
-  padding:10px 12px;
-  color:var(--text-muted);
-  font-family:var(--font-mono);
-  font-size:11.5px;
-  outline:none;
-}
-.share-link-result button{
-  background:var(--accent-amber);
-  color:#2a1c05;
-  border:none;
-  border-radius:10px;
-  padding:0 14px;
-  font-weight:700;
-  font-size:12.5px;
-  cursor:pointer;
-  white-space:nowrap;
-}
-
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
 
-/* ---------- SHARED TOP BAR ---------- */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;
-  background:var(--bg-deep-2);
-  border-bottom:1px solid var(--border-soft);
-  z-index:20;
-  gap:10px;
-}
+/* ---------- TOP BAR ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg-deep-2);border-bottom:1px solid var(--border-soft);z-index:20;gap:8px;}
 .topbar-left{display:flex;align-items:center;gap:8px;min-width:0;}
-.topbar-code{
-  font-family:var(--font-mono);
-  font-size:12.5px;
-  letter-spacing:.03em;
-  color:var(--accent-amber-soft);
-  background:rgba(240,169,78,.1);
-  border:1px solid rgba(240,169,78,.25);
-  padding:5px 9px;
-  border-radius:8px;
-  white-space:nowrap;
-}
-.topbar-me{
-  font-size:12.5px;color:var(--text-muted);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-.link-btn{
-  background:none;border:none;color:var(--text-muted);
-  font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;white-space:nowrap;
-}
+.me-chip{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted);white-space:nowrap;}
+.me-avatar-mini{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:10px;color:#111a2e;flex-shrink:0;}
+.link-btn{background:none;border:none;color:var(--text-muted);font-size:12px;text-decoration:underline;cursor:pointer;padding:4px;white-space:nowrap;}
 .link-btn:hover{color:var(--text-warm);}
 .topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
 
-/* ---------- ROOM SCREEN ---------- */
-#screen-room{background:var(--bg-deep);}
-.room-inner{display:flex;flex-direction:column;flex:1;min-height:0;}
-#map-room{flex:1;min-height:220px;}
+/* ---------- ROOM TABS ---------- */
+.room-tabs{
+  display:flex;gap:6px;overflow-x:auto;padding:10px 14px;background:var(--bg-deep-2);
+  border-bottom:1px solid var(--border-soft);-webkit-overflow-scrolling:touch;
+}
+.room-tabs::-webkit-scrollbar{display:none;}
+.room-tab{
+  flex-shrink:0;padding:7px 13px;border-radius:999px;font-size:12.5px;font-weight:600;
+  background:var(--bg-panel);border:1px solid var(--border-soft);color:var(--text-muted);cursor:pointer;white-space:nowrap;
+  transition:all .15s ease;
+}
+.room-tab.active{background:var(--accent-amber);border-color:var(--accent-amber);color:#2a1c05;}
+.room-tab .plus{font-size:14px;}
+
+/* ---------- HOME/ROOM SCREEN ---------- */
+#screen-home{background:var(--bg-deep);}
+.home-inner{display:flex;flex-direction:column;flex:1;min-height:0;}
+#map-room{flex:1;min-height:200px;}
 
 .wakelock-note{
-  font-size:12px;line-height:1.5;color:var(--text-muted);
-  background:var(--bg-panel);border-top:1px solid var(--border-soft);
+  font-size:12px;line-height:1.5;color:var(--text-muted);background:var(--bg-panel);border-top:1px solid var(--border-soft);
   padding:9px 16px;display:flex;align-items:center;gap:8px;
 }
 .wakelock-note .dot{width:7px;height:7px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
 .wakelock-note.on .dot{background:var(--success-sage);box-shadow:0 0 6px var(--success-glow);}
 .wakelock-note.warn .dot{background:var(--danger-soft);}
 
-.share-toggle-bar{
-  padding:14px 16px 10px;
-  background:var(--bg-deep-2);
-  border-top:1px solid var(--border-soft);
+.share-panel{padding:14px 16px 6px;background:var(--bg-deep-2);border-top:1px solid var(--border-soft);}
+.duration-row{display:flex;gap:8px;margin-bottom:10px;}
+.duration-btn{
+  flex:1;border:1.5px solid var(--border-soft);background:var(--bg-panel);color:var(--text-warm);
+  border-radius:12px;padding:10px 4px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s ease;
 }
+.duration-btn:hover{border-color:var(--accent-amber);}
+.duration-btn.selected{background:var(--accent-amber);border-color:var(--accent-amber);color:#2a1c05;}
 .share-toggle-btn{
-  width:100%;border:none;border-radius:14px;padding:15px;
-  font-family:var(--font-display);font-weight:600;font-size:15px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  transition:transform .15s ease, filter .15s ease;
+  width:100%;border:none;border-radius:14px;padding:15px;font-family:var(--font-display);font-weight:600;font-size:15px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s ease, filter .15s ease;
 }
 .share-toggle-btn:active{transform:scale(.98);}
 .share-toggle-btn.off{background:linear-gradient(180deg,var(--accent-amber-soft),var(--accent-amber));color:#2a1c05;}
 .share-toggle-btn.on{background:var(--bg-panel-3);color:var(--text-warm);border:1.5px solid var(--danger-soft);}
-.my-status-line{
-  font-size:12px;color:var(--text-muted);text-align:center;margin:8px 0 2px;
-}
+.my-status-line{font-size:12px;color:var(--text-muted);text-align:center;margin:8px 0 2px;}
 
-/* ---------- MEMBER LIST / LOBBY ---------- */
-.member-panel{
-  background:var(--bg-deep-2);
-  border-top:1px solid var(--border-soft);
-  padding:14px 16px 22px;
-  max-height:38vh;overflow-y:auto;
-}
-.member-panel-title{
-  font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);
-  font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;
-}
-.member-row{
-  display:flex;align-items:center;gap:10px;
-  background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:12px;
-  padding:10px 12px;margin-bottom:8px;
-}
+.member-panel{background:var(--bg-deep-2);border-top:1px solid var(--border-soft);padding:14px 16px 22px;max-height:34vh;overflow-y:auto;}
+.member-panel-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.member-row{display:flex;align-items:center;gap:10px;background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:12px;padding:10px 12px;margin-bottom:8px;}
 .member-row:last-child{margin-bottom:0;}
 .member-row.me{border-color:rgba(240,169,78,.35);}
-.member-avatar{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-weight:700;font-size:14px;color:#111a2e;
-}
+.member-avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:14px;color:#111a2e;}
 .member-info{flex:1;min-width:0;}
 .member-name{font-size:14px;font-weight:600;color:var(--text-warm);display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .member-name .you-tag{font-size:10.5px;color:var(--accent-amber-soft);font-weight:600;}
 .member-sub{font-size:12px;color:var(--text-muted);margin-top:1px;}
 .member-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
 .member-dot.live{background:var(--accent-amber);box-shadow:0 0 8px var(--accent-amber-glow);animation:pulseDot 1.8s ease-out infinite;}
-.member-dot.stale{background:var(--danger-soft);}
 .member-dist{font-family:var(--font-mono);font-size:13px;color:var(--accent-amber-soft);font-weight:600;flex-shrink:0;}
-@keyframes pulseDot{
-  0%{box-shadow:0 0 0 0 var(--accent-amber-glow);}
-  70%{box-shadow:0 0 0 9px rgba(240,169,78,0);}
-  100%{box-shadow:0 0 0 0 rgba(240,169,78,0);}
-}
+@keyframes pulseDot{0%{box-shadow:0 0 0 0 var(--accent-amber-glow);}70%{box-shadow:0 0 0 9px rgba(240,169,78,0);}100%{box-shadow:0 0 0 0 rgba(240,169,78,0);}}
 .empty-members{font-size:13px;color:var(--text-muted);text-align:center;padding:14px 4px;}
 
-.perm-block{
-  margin:auto;padding:32px 24px;text-align:center;max-width:360px;
-}
-.perm-block .emoji-big{font-size:44px;display:block;margin-bottom:14px;}
-.perm-block p{color:var(--text-muted);font-size:14px;line-height:1.6;margin-bottom:20px;}
-
-/* Leaflet overrides */
 .leaflet-container{background:#0c1424;font-family:var(--font-body);}
-.leaflet-control-attribution{
-  background:rgba(12,18,32,.75) !important;
-  color:var(--text-muted) !important;
-  font-size:9.5px !important;
-}
+.leaflet-control-attribution{background:rgba(12,18,32,.75) !important;color:var(--text-muted) !important;font-size:9.5px !important;}
 .leaflet-control-attribution a{color:var(--route-lavender) !important;}
-.leaflet-control-zoom a{
-  background:var(--bg-panel) !important;color:var(--text-warm) !important;border-color:var(--border-soft) !important;
-}
+.leaflet-control-zoom a{background:var(--bg-panel) !important;color:var(--text-warm) !important;border-color:var(--border-soft) !important;}
 .marker-dot-wrap{position:relative;width:26px;height:26px;}
-.marker-dot-ring{
-  position:absolute;inset:0;border-radius:50%;
-  animation:ringOut 1.8s ease-out infinite;
-}
+.marker-dot-ring{position:absolute;inset:0;border-radius:50%;animation:ringOut 1.8s ease-out infinite;}
 @keyframes ringOut{0%{transform:scale(.45);opacity:.9;}100%{transform:scale(1.15);opacity:0;}}
-.marker-dot-core{
-  position:absolute;top:7px;left:7px;width:12px;height:12px;border-radius:50%;
-  border:2px solid var(--text-warm);
-}
-.marker-label{
-  position:absolute;top:-22px;left:50%;transform:translateX(-50%);
-  background:rgba(12,18,32,.85);color:var(--text-warm);
-  font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;white-space:nowrap;
-}
+.marker-dot-core{position:absolute;top:7px;left:7px;width:12px;height:12px;border-radius:50%;border:2px solid var(--text-warm);}
+.marker-label{position:absolute;top:-22px;left:50%;transform:translateX(-50%);background:rgba(12,18,32,.85);color:var(--text-warm);font-size:10.5px;font-weight:600;padding:2px 6px;border-radius:6px;white-space:nowrap;}
 
 .toast{
-  position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);
-  background:var(--bg-panel-3);border:1px solid var(--border-soft);
-  color:var(--text-warm);font-size:13px;padding:10px 16px;border-radius:10px;
-  z-index:60;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;
-  box-shadow:0 10px 30px -10px rgba(0,0,0,.6);
+  position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--bg-panel-3);
+  border:1px solid var(--border-soft);color:var(--text-warm);font-size:13px;padding:10px 16px;border-radius:10px;
+  z-index:60;opacity:0;transition:opacity .25s ease, transform .25s ease;pointer-events:none;box-shadow:0 10px 30px -10px rgba(0,0,0,.6);
+  max-width:88vw;text-align:center;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(6,10,20,.7);z-index:70;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex;}
+.modal-box{
+  background:var(--bg-panel);border:1px solid var(--border-soft);border-radius:18px;padding:20px;max-width:380px;width:100%;
+  box-shadow:0 20px 50px -20px rgba(0,0,0,.7);
+}
+.modal-box h3{margin:0 0 6px;font-family:var(--font-display);font-size:17px;}
+.modal-box p{margin:0 0 14px;font-size:13px;color:var(--text-muted);line-height:1.6;}
+.modal-link-row{display:flex;gap:8px;margin-bottom:14px;}
+.modal-link-row input{flex:1;min-width:0;background:var(--bg-deep-2);border:1.5px solid var(--border-soft);border-radius:10px;padding:10px 12px;color:var(--text-muted);font-family:var(--font-mono);font-size:11.5px;outline:none;}
+.modal-link-row button{background:var(--accent-amber);color:#2a1c05;border:none;border-radius:10px;padding:0 14px;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap;}
+.modal-close-btn{width:100%;background:var(--bg-panel-3);border:1px solid var(--border-soft);color:var(--text-warm);border-radius:12px;padding:11px;font-weight:600;font-size:13.5px;cursor:pointer;}
+
 @media (min-width:640px){
-  #screen-room{align-items:center;}
-  .room-inner{max-width:560px;width:100%;margin:0 auto;height:100vh;box-shadow:0 0 60px rgba(0,0,0,.5);}
+  #screen-home{align-items:center;}
+  .home-inner{max-width:560px;width:100%;margin:0 auto;height:100vh;box-shadow:0 0 60px rgba(0,0,0,.5);}
 }
 </style>
 </head>
@@ -342,47 +201,37 @@ input{font-family:inherit;}
 
 <div id="app">
 
-  <!-- ================= SETUP SCREEN ================= -->
-  <section id="screen-setup" class="screen active">
-    <div class="setup-wrap">
+  <!-- ================= LOGIN SCREEN ================= -->
+  <section id="screen-login" class="screen active">
+    <div class="login-wrap">
       <h1 class="wordmark">otw<span class="dot">.</span></h1>
       <p class="tagline">Satu titik cahaya yang sedang menuju kamu.</p>
 
       <div class="card">
+        <div class="invite-banner" id="invite-banner" style="display:none;"></div>
         <label class="field-label" for="username-input">Nama kamu</label>
         <input id="username-input" type="text" placeholder="contoh: Rani" maxlength="20" autocomplete="off" />
-
-        <label class="field-label mt" for="kode-input">Kode room</label>
-        <input id="kode-input" type="text" placeholder="contoh: RUMAH-JINGGA" maxlength="24" autocomplete="off" autocapitalize="characters" />
-        <p class="field-help">Semua orang yang tahu kode/link ini bisa gabung dan sama-sama berbagi lokasi di satu room — tidak ada peran khusus, siapa saja bisa mulai berbagi kapan pun.</p>
-
-        <button class="big-btn btn-amber" id="btn-join-room" type="button" style="margin-bottom:12px;">Masuk ke room</button>
-
-        <div class="or-divider"><span>atau</span></div>
-        <button class="big-btn btn-ghost" id="btn-share-link" type="button">🔗 Buat &amp; bagikan link room</button>
-        <div id="share-link-result" class="share-link-result" style="display:none;">
-          <input type="text" id="share-link-value" readonly />
-          <button id="btn-copy-link" type="button">Salin</button>
-        </div>
+        <p class="field-help">Cukup sekali ini saja. Setelah masuk, room kamu sendiri otomatis dibuat — tidak perlu bikin atau ingat kode apa pun.</p>
+        <button class="big-btn btn-amber" id="btn-login" type="button">Masuk</button>
       </div>
-
-      <p class="setup-footnote">Butuh izin akses lokasi dari browser. Bisa langsung dipakai dari HP tanpa install apa pun — tambahkan ke <b>Layar Utama</b> biar terasa seperti aplikasi asli, dan supaya lokasi lebih stabil saat berbagi.</p>
+      <p class="setup-footnote">Butuh izin akses lokasi saat mulai berbagi. Tambahkan ke <b>Layar Utama</b> di HP biar terasa seperti aplikasi asli dan lokasi lebih stabil.</p>
     </div>
   </section>
 
-  <!-- ================= ROOM SCREEN ================= -->
-  <section id="screen-room" class="screen">
-    <div class="room-inner">
+  <!-- ================= HOME / ROOM SCREEN ================= -->
+  <section id="screen-home" class="screen">
+    <div class="home-inner">
       <div class="topbar">
         <div class="topbar-left">
-          <span class="topbar-code" id="room-code-label">—</span>
-          <span class="topbar-me" id="room-me-label"></span>
+          <span class="me-chip"><span class="me-avatar-mini" id="me-avatar-mini"></span><span id="me-name-label"></span></span>
         </div>
         <div class="topbar-right">
-          <button class="link-btn" id="btn-room-share-link">Bagikan link</button>
-          <button class="link-btn" id="btn-room-leave">Keluar</button>
+          <button class="link-btn" id="btn-notif-toggle">🔔 Notifikasi</button>
+          <button class="link-btn" id="btn-invite">+ Undang</button>
         </div>
       </div>
+
+      <div class="room-tabs" id="room-tabs"></div>
 
       <div id="map-room"></div>
 
@@ -391,9 +240,14 @@ input{font-family:inherit;}
         <span id="wakelock-text">Wake Lock belum aktif.</span>
       </div>
 
-      <div class="share-toggle-bar">
-        <button class="share-toggle-btn off" id="btn-toggle-share">📍 Mulai berbagi lokasi</button>
-        <p class="my-status-line" id="my-status-line">Lokasimu belum dibagikan.</p>
+      <div class="share-panel">
+        <div class="duration-row" id="duration-row">
+          <button class="duration-btn" data-min="15">15 menit</button>
+          <button class="duration-btn" data-min="60">1 jam</button>
+          <button class="duration-btn" data-min="480">8 jam</button>
+        </div>
+        <button class="share-toggle-btn off" id="btn-toggle-share">📍 Bagikan lokasi live</button>
+        <p class="my-status-line" id="my-status-line">Pilih durasi lalu mulai berbagi.</p>
       </div>
 
       <div class="member-panel">
@@ -407,6 +261,18 @@ input{font-family:inherit;}
 
 <div class="toast" id="toast"></div>
 
+<div class="modal-overlay" id="invite-modal">
+  <div class="modal-box">
+    <h3>Undang ke room ini</h3>
+    <p>Siapa pun yang buka link ini akan otomatis <b>jadi anggota tetap</b> room kamu, dan bisa lihat siapa saja yang sedang membagikan lokasi live.</p>
+    <div class="modal-link-row">
+      <input type="text" id="invite-link-value" readonly />
+      <button id="btn-copy-invite">Salin</button>
+    </div>
+    <button class="modal-close-btn" id="btn-close-invite">Tutup</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -415,8 +281,7 @@ input{font-family:inherit;}
   "use strict";
 
   /* ---------------- FIREBASE CONFIG -----------------
-     Ganti seluruh objek di bawah ini dengan config dari
-     Firebase Console punyamu sendiri.
+     Ganti dengan config dari Firebase Console-mu sendiri kalau beda:
      Project Settings -> General -> "Your apps" -> SDK setup and configuration
      ---------------------------------------------------- */
   const firebaseConfig = {
@@ -438,273 +303,248 @@ input{font-family:inherit;}
   }catch(e){
     console.error("Firebase gagal diinisialisasi. Cek firebaseConfig di atas.", e);
   }
-
   function showConfigWarningIfNeeded(){
-    if(!fbReady || firebaseConfig.apiKey === "GANTI_DENGAN_API_KEY"){
-      toast("⚠️ Firebase belum dikonfigurasi — lihat README.md");
-      return true;
-    }
+    if(!fbReady){ toast("⚠️ Firebase belum terkonfigurasi dengan benar"); return true; }
     return false;
   }
 
-  /* ---------------- storage helpers (Firebase Realtime Database) ---------------- */
-  function fbSet(path, value){
-    if(!fbReady) return Promise.resolve(false);
-    return db.ref(path).set(value).then(()=>true).catch(e=>{ console.error("fbSet failed", path, e); return false; });
-  }
-  function fbRemove(path){
-    if(!fbReady) return Promise.resolve(false);
-    return db.ref(path).remove().then(()=>true).catch(()=>false);
-  }
-  function fbListen(path, cb){
-    if(!fbReady) return null;
-    const handler = db.ref(path).on("value", snap => cb(snap.exists() ? snap.val() : null));
-    return handler;
-  }
-  function fbUnlisten(path, handler){
-    if(!fbReady || !handler) return;
-    db.ref(path).off("value", handler);
-  }
-  function fbOnDisconnectRemove(path){
-    if(!fbReady) return;
-    try{ db.ref(path).onDisconnect().remove(); }catch(e){/* abaikan */}
-  }
-  function fbCancelOnDisconnect(path){
-    if(!fbReady) return;
-    try{ db.ref(path).onDisconnect().cancel(); }catch(e){/* abaikan */}
-  }
+  function fbSet(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).set(value).then(()=>true).catch(e=>{console.error("fbSet",path,e);return false;}); }
+  function fbUpdate(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).update(value).then(()=>true).catch(e=>{console.error("fbUpdate",path,e);return false;}); }
+  function fbRemove(path){ if(!fbReady) return Promise.resolve(false); return db.ref(path).remove().then(()=>true).catch(()=>false); }
+  function fbGet(path){ if(!fbReady) return Promise.resolve(null); return db.ref(path).get().then(s=>s.exists()?s.val():null).catch(()=>null); }
+  function fbListen(path, cb){ if(!fbReady) return null; return db.ref(path).on("value", snap => cb(snap.exists()?snap.val():null)); }
+  function fbUnlisten(path, handler){ if(!fbReady || !handler) return; db.ref(path).off("value", handler); }
 
-  /* ---------------- sesi lokal (device ini saja, pakai localStorage) ---------------- */
-  function localGet(key){
-    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }catch(e){ return null; }
-  }
-  function localSet(key, value){
-    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){ /* abaikan */ }
-  }
+  /* ---------------- local session ---------------- */
+  function localGet(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch(e){ return null; } }
+  function localSet(key, value){ try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){} }
 
-  function getOrCreateMemberId(){
-    let id = localGet("otw-member-id");
-    if(!id){
-      id = "m" + Math.random().toString(36).slice(2,10) + Date.now().toString(36);
-      localSet("otw-member-id", id);
-    }
+  function getOrCreateUserId(){
+    let id = localGet("otw-user-id");
+    if(!id){ id = "u"+Math.random().toString(36).slice(2,10)+Date.now().toString(36); localSet("otw-user-id", id); }
     return id;
   }
-  const MEMBER_ID = getOrCreateMemberId();
+  const USER_ID = getOrCreateUserId();
+  function getSavedName(){ return localGet("otw-username") || ""; }
+  function saveName(n){ localSet("otw-username", n); }
 
-  function getSavedUsername(){ return localGet("otw-username") || ""; }
-  function saveUsername(name){ localSet("otw-username", name); }
-
-  /* ---------------- small utils ---------------- */
+  /* ---------------- utils ---------------- */
   function toast(msg){
     const el = document.getElementById("toast");
-    el.textContent = msg;
-    el.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(()=>el.classList.remove("show"), 2600);
+    el.textContent = msg; el.classList.add("show");
+    clearTimeout(toast._t); toast._t = setTimeout(()=>el.classList.remove("show"), 2600);
   }
-
-  function haversine(lat1, lng1, lat2, lng2){
-    const R = 6371000;
-    const toRad = d => d * Math.PI/180;
-    const dLat = toRad(lat2-lat1);
-    const dLng = toRad(lng2-lng1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  function haversine(lat1,lng1,lat2,lng2){
+    const R=6371000, toRad=d=>d*Math.PI/180;
+    const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
+    const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
   }
+  function fmtDistance(m){ if(m==null) return "—"; if(m<1000) return Math.round(m/10)*10+" m"; return (m/1000).toFixed(1)+" km"; }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+  const PALETTE=["#f0a94e","#8ea6e0","#a3c78d","#e2897f","#c792ea","#4ecdc4","#ffcf6b","#7ee8fa","#ff9fb2","#b8e986"];
+  function colorForId(id){ let h=0; for(let i=0;i<id.length;i++) h=(h*31+id.charCodeAt(i))>>>0; return PALETTE[h%PALETTE.length]; }
+  function initialsFor(name){ const c=(name||"?").trim(); if(!c) return "?"; const p=c.split(/\s+/); return (p[0][0]+(p[1]?p[1][0]:"")).toUpperCase(); }
+  function generateRoomCode(){ return "R"+Math.random().toString(36).slice(2,9).toUpperCase(); }
 
-  function fmtDistance(m){
-    if(m == null) return "—";
-    if(m < 1000) return Math.round(m/10)*10 + " m";
-    return (m/1000).toFixed(1) + " km";
-  }
-
-  function normalizeCode(raw){
-    return (raw||"").trim().toUpperCase().replace(/\s+/g,"-").slice(0,24);
-  }
-
-  const PALETTE = ["#f0a94e","#8ea6e0","#a3c78d","#e2897f","#c792ea","#4ecdc4","#ffcf6b","#7ee8fa","#ff9fb2","#b8e986"];
-  function colorForId(id){
-    let h = 0;
-    for(let i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
-    return PALETTE[h % PALETTE.length];
-  }
-  function initialsFor(name){
-    const clean = (name||"?").trim();
-    if(!clean) return "?";
-    const parts = clean.split(/\s+/);
-    return (parts[0][0] + (parts[1] ? parts[1][0] : "")).toUpperCase();
-  }
-
-  /* ---------------- link berbagi (1 link = 1 room, bisa dipakai berkali-kali) ---------------- */
-  const RANDOM_CODE_WORDS = ["SENJA","RUMAH","PULANG","JINGGA","LANGIT","OMBAK","BINTANG","KOPI","HUJAN","LAUT"];
-
-  function generateRandomCode(){
-    const w = RANDOM_CODE_WORDS[Math.floor(Math.random()*RANDOM_CODE_WORDS.length)];
-    const suffix = Math.random().toString(36).slice(2,6).toUpperCase();
-    return w + "-" + suffix;
-  }
-
-  function buildRoomLink(code){
+  function buildInviteLink(roomCode){
     const url = new URL(location.href);
-    url.search = "";
-    url.hash = "";
-    url.searchParams.set("room", code);
+    url.search=""; url.hash="";
+    url.searchParams.set("join", roomCode);
     return url.toString();
   }
-
   async function copyToClipboard(text){
-    try{
-      await navigator.clipboard.writeText(text);
-      toast("Link disalin! Kirim ke teman-teman kamu.");
-    }catch(e){
-      toast("Gagal menyalin otomatis — salin manual dari kotak di bawah ya");
-    }
+    try{ await navigator.clipboard.writeText(text); toast("Link disalin! Kirim ke orang yang mau kamu undang."); }
+    catch(e){ toast("Gagal menyalin otomatis — salin manual dari kotak"); }
   }
-
-  function showLinkFallback(url){
-    const wrap = document.getElementById("share-link-result");
-    const input = document.getElementById("share-link-value");
-    if(wrap && input){
-      wrap.style.display = "flex";
-      input.value = url;
-    }
-    copyToClipboard(url);
-  }
-
-  async function shareRoomLink(code){
-    if(!code){ toast("Isi atau buat kode dulu ya"); return; }
-    const url = buildRoomLink(code);
-    const shareData = {
-      title: "otw.",
-      text: "Yuk pantau perjalanan bareng — buka link ini buat gabung ke room " + code + ":",
-      url
-    };
-    if(navigator.share){
-      try{ await navigator.share(shareData); return; }catch(e){ /* fallback ke salin link */ }
-    }
-    showLinkFallback(url);
-  }
-
-  function readRoomFromURL(){
+  function readInviteFromURL(){
     try{
       const params = new URLSearchParams(location.search);
-      const room = params.get("room");
-      if(room){
+      const join = params.get("join");
+      if(join){
         const clean = new URL(location.href);
-        clean.searchParams.delete("room");
+        clean.searchParams.delete("join");
         history.replaceState({}, "", clean.pathname + clean.search + clean.hash);
-        return normalizeCode(room);
+        return join.trim();
       }
-    }catch(e){ /* abaikan */ }
+    }catch(e){}
     return null;
   }
 
   /* ---------------- navigation ---------------- */
-  const screens = {
-    setup: document.getElementById("screen-setup"),
-    room: document.getElementById("screen-room"),
-  };
-  function showScreen(name){
-    Object.values(screens).forEach(s=>s.classList.remove("active"));
-    screens[name].classList.add("active");
+  const screens = { login: document.getElementById("screen-login"), home: document.getElementById("screen-home") };
+  function showScreen(name){ Object.values(screens).forEach(s=>s.classList.remove("active")); screens[name].classList.add("active"); }
+
+  /* ---------------- state ---------------- */
+  let myName = getSavedName();
+  let pendingInvite = readInviteFromURL();
+  let myRooms = {};       // {roomCode: true}
+  let activeRoom = null;
+  let mapRoom = null;
+  let markers = {};
+  let membersData = {};
+  let sharesData = {};
+  let membersHandler=null, sharesHandler=null, myRoomsHandler=null;
+  let notifyPermission = "default";
+  let prevSharingIds = new Set();
+
+  if(pendingInvite){
+    document.getElementById("invite-banner").style.display = "block";
+    document.getElementById("invite-banner").textContent = "Kamu diundang ke room \"" + pendingInvite + "\". Isi nama untuk gabung otomatis.";
+  }
+  document.getElementById("username-input").value = myName;
+
+  document.getElementById("btn-login").addEventListener("click", doLogin);
+  document.getElementById("username-input").addEventListener("keydown", e=>{ if(e.key==="Enter") doLogin(); });
+
+  function doLogin(){
+    const name = document.getElementById("username-input").value.trim().slice(0,20);
+    if(!name){ toast("Isi nama kamu dulu ya"); return; }
+    myName = name; saveName(name);
+    if(showConfigWarningIfNeeded()) return;
+    bootstrapUser();
   }
 
-  /* ================= SETUP SCREEN LOGIC ================= */
-  const usernameInput = document.getElementById("username-input");
-  const kodeInput = document.getElementById("kode-input");
-  usernameInput.value = getSavedUsername();
+  /* jika sesi lama sudah ada (login sekali, lalu selalu masuk otomatis) */
+  if(myName && !pendingInvite){
+    bootstrapUser();
+  } else if(myName && pendingInvite){
+    // sudah pernah login di device ini, tapi buka lewat invite link baru -> auto join, tanpa isi nama lagi
+    bootstrapUser();
+  }
 
-  document.getElementById("btn-join-room").addEventListener("click", ()=>{
-    const name = usernameInput.value.trim().slice(0,20);
-    const code = normalizeCode(kodeInput.value);
-    if(!name){ toast("Isi nama kamu dulu ya"); usernameInput.focus(); return; }
-    if(!code){ toast("Isi kode room dulu ya"); kodeInput.focus(); return; }
-    saveUsername(name);
-    joinRoom(code, name);
-  });
-
-  document.getElementById("btn-share-link").addEventListener("click", ()=>{
-    let code = normalizeCode(kodeInput.value);
-    if(!code){
-      code = generateRandomCode();
-      kodeInput.value = code;
-    }
-    shareRoomLink(code);
-  });
-  document.getElementById("btn-copy-link").addEventListener("click", ()=>{
-    const input = document.getElementById("share-link-value");
-    if(input && input.value) copyToClipboard(input.value);
-  });
-
-  /* ================= ROOM SCREEN ================= */
-  let currentCode = null;
-  let currentName = null;
-  let mapRoom = null;
-  let markers = {}; // memberId -> {marker, ring}
-  let membersData = {};   // memberId -> {name, ts}
-  let locationsData = {}; // memberId -> {lat,lng,accuracy,ts,...}
-  let membersHandler = null, locationsHandler = null;
-  let heartbeatInt = null;
-  let watchId = null;
-  let isSharing = false;
-  let myLastLoc = null;
-  let wakeLock = null;
-
-  function joinRoom(code, name){
+  async function bootstrapUser(){
     if(showConfigWarningIfNeeded()) return;
-    currentCode = code;
-    currentName = name;
-    document.getElementById("room-code-label").textContent = code;
-    document.getElementById("room-me-label").textContent = "kamu: " + name;
-    showScreen("room");
+    document.getElementById("me-name-label").textContent = myName;
+    document.getElementById("me-avatar-mini").textContent = initialsFor(myName);
+    document.getElementById("me-avatar-mini").style.background = colorForId(USER_ID);
+
+    let userRec = await fbGet("users/" + USER_ID);
+    if(!userRec){
+      const homeRoom = generateRoomCode();
+      userRec = { name: myName, homeRoom, rooms: { [homeRoom]: true } };
+      await fbSet("users/" + USER_ID, userRec);
+      await fbSet("rooms/" + homeRoom + "/members/" + USER_ID, { name: myName, joinedAt: Date.now(), isOwner: true });
+    } else if(userRec.name !== myName){
+      await fbUpdate("users/" + USER_ID, { name: myName });
+      userRec.name = myName;
+    }
+
+    if(pendingInvite){
+      const roomCode = pendingInvite;
+      pendingInvite = null;
+      const existing = await fbGet("rooms/" + roomCode + "/members/" + USER_ID);
+      if(!existing){
+        await fbSet("rooms/" + roomCode + "/members/" + USER_ID, { name: myName, joinedAt: Date.now() });
+      }
+      await fbUpdate("users/" + USER_ID + "/rooms", { [roomCode]: true });
+      userRec.rooms = userRec.rooms || {};
+      userRec.rooms[roomCode] = true;
+      toast("Berhasil gabung ke room \"" + roomCode + "\" 🎉");
+      activeRoom = roomCode;
+    } else {
+      activeRoom = userRec.homeRoom;
+    }
+
+    myRooms = userRec.rooms || { [userRec.homeRoom]: true };
+    myHomeRoom = userRec.homeRoom;
+
+    showScreen("home");
     ensureMap();
     setTimeout(()=>{ if(mapRoom) mapRoom.invalidateSize(); }, 60);
 
-    // Daftar sebagai member online di room ini (heartbeat), auto-hapus kalau tab ditutup.
-    const memberPath = "rooms/" + code + "/members/" + MEMBER_ID;
-    fbSet(memberPath, {name, ts: Date.now()});
-    fbOnDisconnectRemove(memberPath);
-    heartbeatInt = setInterval(()=>{
-      fbSet(memberPath, {name, ts: Date.now()});
-    }, 15000);
-
-    membersHandler = fbListen("rooms/" + code + "/members", (val)=>{
-      membersData = val || {};
-      renderMembers();
+    myRoomsHandler = fbListen("users/" + USER_ID + "/rooms", (val)=>{
+      myRooms = val || {};
+      renderRoomTabs();
     });
-    locationsHandler = fbListen("rooms/" + code + "/locations", (val)=>{
-      locationsData = val || {};
+
+    switchRoom(activeRoom);
+  }
+
+  let myHomeRoom = null;
+
+  function renderRoomTabs(){
+    const wrap = document.getElementById("room-tabs");
+    const codes = Object.keys(myRooms);
+    wrap.innerHTML = codes.map(code=>{
+      const label = (code === myHomeRoom) ? "🏠 Room saya" : code;
+      return '<button class="room-tab' + (code===activeRoom?' active':'') + '" data-code="'+code+'">' + escapeHtml(label) + '</button>';
+    }).join("");
+    wrap.querySelectorAll(".room-tab").forEach(btn=>{
+      btn.addEventListener("click", ()=> switchRoom(btn.getAttribute("data-code")));
+    });
+  }
+
+  function switchRoom(code){
+    if(activeRoom === code && membersHandler) { renderRoomTabs(); return; }
+    // lepas listener room lama
+    if(membersHandler) fbUnlisten("rooms/" + activeRoom + "/members", membersHandler);
+    if(sharesHandler) fbUnlisten("rooms/" + activeRoom + "/shares", sharesHandler);
+    activeRoom = code;
+    membersData = {}; sharesData = {}; prevSharingIds = new Set();
+    Object.values(markers).forEach(m => { if(m.rafId) cancelAnimationFrame(m.rafId); if(mapRoom) mapRoom.removeLayer(m.layer); });
+    markers = {};
+    renderMapMarkers._fitted = false;
+    renderRoomTabs();
+
+    membersHandler = fbListen("rooms/" + activeRoom + "/members", (val)=>{ membersData = val || {}; renderMembers(); });
+    sharesHandler = fbListen("rooms/" + activeRoom + "/shares", (val)=>{
+      const now = Date.now();
+      const clean = {};
+      Object.keys(val || {}).forEach(id=>{ if(val[id] && val[id].until > now) clean[id] = val[id]; });
+      checkNewSharers(clean);
+      sharesData = clean;
       renderMembers();
       renderMapMarkers();
     });
   }
 
-  function leaveRoom(){
-    stopSharing();
-    if(currentCode){
-      const memberPath = "rooms/" + currentCode + "/members/" + MEMBER_ID;
-      const locPath = "rooms/" + currentCode + "/locations/" + MEMBER_ID;
-      fbCancelOnDisconnect(memberPath);
-      fbCancelOnDisconnect(locPath);
-      fbRemove(memberPath);
-      fbRemove(locPath);
-      if(membersHandler) fbUnlisten("rooms/" + currentCode + "/members", membersHandler);
-      if(locationsHandler) fbUnlisten("rooms/" + currentCode + "/locations", locationsHandler);
-    }
-    if(heartbeatInt){ clearInterval(heartbeatInt); heartbeatInt = null; }
-    membersData = {}; locationsData = {}; myLastLoc = null;
-    Object.values(markers).forEach(m => mapRoom && mapRoom.removeLayer(m.layer));
-    markers = {};
-    currentCode = null; currentName = null;
-    showScreen("setup");
+  function checkNewSharers(newShares){
+    const nowSharing = new Set(Object.keys(newShares));
+    nowSharing.forEach(id=>{
+      if(id !== USER_ID && !prevSharingIds.has(id)){
+        const name = (membersData[id] && membersData[id].name) || "Seseorang";
+        notifyUser(name + " mulai membagikan lokasi live", "Ketuk untuk lihat di peta");
+      }
+    });
+    prevSharingIds = nowSharing;
   }
 
-  document.getElementById("btn-room-leave").addEventListener("click", leaveRoom);
-  document.getElementById("btn-room-share-link").addEventListener("click", ()=>{
-    shareRoomLink(currentCode);
+  function notifyUser(title, body){
+    toast(title);
+    if(notifyPermission === "granted" && document.visibilityState !== "visible"){
+      try{ new Notification(title, { body, tag: "otw-share" }); }catch(e){}
+    }
+  }
+
+  document.getElementById("btn-notif-toggle").addEventListener("click", async ()=>{
+    if(!("Notification" in window)){ toast("Browser ini tidak mendukung notifikasi"); return; }
+    if(Notification.permission === "granted"){ notifyPermission="granted"; toast("Notifikasi sudah aktif ✅"); return; }
+    const perm = await Notification.requestPermission();
+    notifyPermission = perm;
+    if(perm === "granted") toast("Notifikasi diaktifkan — akan muncul kalau app dibuka/di-background-kan");
+    else toast("Notifikasi tidak diaktifkan. Kamu tetap dapat lihat update lewat toast selama app terbuka.");
+  });
+  if("Notification" in window) notifyPermission = Notification.permission;
+
+  /* ---------------- invite modal ---------------- */
+  document.getElementById("btn-invite").addEventListener("click", ()=>{
+    const link = buildInviteLink(activeRoom);
+    document.getElementById("invite-link-value").value = link;
+    document.getElementById("invite-modal").classList.add("show");
+  });
+  document.getElementById("btn-close-invite").addEventListener("click", ()=>{
+    document.getElementById("invite-modal").classList.remove("show");
+  });
+  document.getElementById("btn-copy-invite").addEventListener("click", async ()=>{
+    const link = document.getElementById("invite-link-value").value;
+    if(navigator.share){
+      try{ await navigator.share({title:"otw.", text:"Gabung ke room lokasi live saya:", url: link}); return; }catch(e){}
+    }
+    copyToClipboard(link);
   });
 
+  /* ---------------- map ---------------- */
   function ensureMap(){
     if(mapRoom) return;
     mapRoom = L.map("map-room", {zoomControl:true, attributionControl:true}).setView([-2.5, 118], 5);
@@ -713,238 +553,189 @@ input{font-family:inherit;}
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(mapRoom);
   }
-
   function markerIcon(color, label){
     return L.divIcon({
       className:"", iconSize:[26,26], iconAnchor:[13,13],
-      html: '<div class="marker-dot-wrap">' +
-              '<div class="marker-label">' + label + '</div>' +
-              '<div class="marker-dot-ring" style="border:2px solid '+color+';"></div>' +
-              '<div class="marker-dot-core" style="background:'+color+';box-shadow:0 0 10px 3px '+color+'88;"></div>' +
-            '</div>'
+      html: '<div class="marker-dot-wrap"><div class="marker-label">'+label+'</div>'+
+            '<div class="marker-dot-ring" style="border:2px solid '+color+';"></div>'+
+            '<div class="marker-dot-core" style="background:'+color+';box-shadow:0 0 10px 3px '+color+'88;"></div></div>'
     });
+  }
+  const MARKER_ANIM_MS = 1400; // durasi "meluncur" dari posisi lama ke posisi baru
+  function easeInOutQuad(t){ return t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2; }
+
+  function animateMarkerTo(entry, toLat, toLng){
+    // hentikan animasi sebelumnya kalau masih jalan, mulai dari posisi ikon saat ini
+    if(entry.rafId) cancelAnimationFrame(entry.rafId);
+    const cur = entry.layer.getLatLng();
+    const fromLat = cur.lat, fromLng = cur.lng;
+    const start = performance.now();
+
+    function step(now){
+      const t = Math.min(1, (now-start)/MARKER_ANIM_MS);
+      const e = easeInOutQuad(t);
+      const lat = fromLat + (toLat-fromLat)*e;
+      const lng = fromLng + (toLng-fromLng)*e;
+      entry.layer.setLatLng([lat, lng]);
+      if(t < 1){
+        entry.rafId = requestAnimationFrame(step);
+      } else {
+        entry.rafId = null;
+      }
+    }
+    entry.rafId = requestAnimationFrame(step);
   }
 
   function renderMapMarkers(){
     if(!mapRoom) return;
-    const now = Date.now();
-    const seen = new Set();
-    let boundsPts = [];
-
-    Object.keys(locationsData).forEach(id=>{
-      const loc = locationsData[id];
-      if(!loc || (now - loc.ts) > 5 * 60000) return; // sembunyikan lokasi basi lebih dari 5 menit
+    const seen = new Set(); let boundsPts = [];
+    Object.keys(sharesData).forEach(id=>{
+      const loc = sharesData[id];
       seen.add(id);
       const name = (membersData[id] && membersData[id].name) || "?";
-      const label = (id === MEMBER_ID ? "Kamu" : name);
+      const label = (id===USER_ID ? "Kamu" : name);
       const color = colorForId(id);
       boundsPts.push([loc.lat, loc.lng]);
-
       if(!markers[id]){
-        const layer = L.marker([loc.lat, loc.lng], {icon: markerIcon(color, label)}).addTo(mapRoom);
-        markers[id] = {layer};
+        markers[id] = { layer: L.marker([loc.lat, loc.lng], {icon: markerIcon(color, label)}).addTo(mapRoom), rafId: null };
       } else {
-        markers[id].layer.setLatLng([loc.lat, loc.lng]);
         markers[id].layer.setIcon(markerIcon(color, label));
+        animateMarkerTo(markers[id], loc.lat, loc.lng);
       }
     });
-
     Object.keys(markers).forEach(id=>{
       if(!seen.has(id)){
+        if(markers[id].rafId) cancelAnimationFrame(markers[id].rafId);
         mapRoom.removeLayer(markers[id].layer);
         delete markers[id];
       }
     });
-
     if(boundsPts.length && !renderMapMarkers._fitted){
       renderMapMarkers._fitted = true;
-      if(boundsPts.length === 1) mapRoom.setView(boundsPts[0], 15);
+      if(boundsPts.length===1) mapRoom.setView(boundsPts[0], 15);
       else mapRoom.fitBounds(L.latLngBounds(boundsPts), {padding:[40,40]});
     }
   }
 
+  /* ---------------- member list ---------------- */
   function renderMembers(){
     const now = Date.now();
     const listEl = document.getElementById("member-list");
     const countEl = document.getElementById("member-count");
     const ids = Object.keys(membersData);
     countEl.textContent = ids.length;
+    if(!ids.length){ listEl.innerHTML = '<div class="empty-members">Belum ada anggota lain di room ini. Undang teman lewat tombol di atas.</div>'; return; }
 
-    if(!ids.length){
-      listEl.innerHTML = '<div class="empty-members">Belum ada yang gabung ke room ini.</div>';
-      return;
-    }
-
-    // urutkan: kamu dulu, lalu berdasarkan nama
-    ids.sort((a,b)=>{
-      if(a === MEMBER_ID) return -1;
-      if(b === MEMBER_ID) return 1;
-      return ((membersData[a].name||"")).localeCompare(membersData[b].name||"");
-    });
-
-    const myLoc = locationsData[MEMBER_ID];
-    const myFresh = myLoc && (now - myLoc.ts) < 90000;
+    ids.sort((a,b)=>{ if(a===USER_ID) return -1; if(b===USER_ID) return 1; return ((membersData[a].name||"")).localeCompare(membersData[b].name||""); });
+    const myShare = sharesData[USER_ID];
 
     listEl.innerHTML = ids.map(id=>{
       const m = membersData[id];
-      const loc = locationsData[id];
-      const isMe = id === MEMBER_ID;
+      const share = sharesData[id];
+      const isMe = id===USER_ID;
       const color = colorForId(id);
-      const fresh = loc && (now - loc.ts) < 20000;
-      const stale = loc && !fresh && (now - loc.ts) < 90000;
-      let dotClass = "member-dot";
-      let subText = "Belum berbagi lokasi";
-      if(loc){
-        if(fresh){ dotClass += " live"; subText = "Berbagi aktif"; }
-        else if(stale){ dotClass += " stale"; subText = "Sinyal terlambat"; }
-        else { subText = "Berhenti / lokasi lama"; }
+      let dotClass = "member-dot", subText = "Tidak sedang berbagi";
+      if(share){
+        dotClass += " live";
+        const remainMin = Math.max(0, Math.round((share.until-now)/60000));
+        subText = "Live · sisa " + remainMin + " mnt";
       }
       let distText = "—";
-      if(!isMe && myFresh && loc && (now - loc.ts) < 90000){
-        distText = fmtDistance(haversine(myLoc.lat, myLoc.lng, loc.lat, loc.lng));
-      }
-      return '<div class="member-row' + (isMe ? ' me' : '') + '">' +
-        '<div class="member-avatar" style="background:' + color + ';">' + initialsFor(m.name) + '</div>' +
-        '<div class="member-info">' +
-          '<div class="member-name">' + escapeHtml(m.name || "?") + (isMe ? ' <span class="you-tag">(kamu)</span>' : '') + '</div>' +
-          '<div class="member-sub">' + subText + '</div>' +
-        '</div>' +
-        '<span class="' + dotClass + '"></span>' +
-        (isMe ? '' : '<span class="member-dist">' + distText + '</span>') +
+      if(!isMe && myShare && share) distText = fmtDistance(haversine(myShare.lat, myShare.lng, share.lat, share.lng));
+      return '<div class="member-row'+(isMe?' me':'')+'">'+
+        '<div class="member-avatar" style="background:'+color+';">'+initialsFor(m.name)+'</div>'+
+        '<div class="member-info"><div class="member-name">'+escapeHtml(m.name||"?")+(isMe?' <span class="you-tag">(kamu)</span>':'')+'</div>'+
+        '<div class="member-sub">'+subText+'</div></div>'+
+        '<span class="'+dotClass+'"></span>'+
+        (isMe?'':'<span class="member-dist">'+distText+'</span>')+
       '</div>';
     }).join("");
   }
 
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  }
-
-  /* ---------------- Wake Lock (biar layar tidak mati saat berbagi) ---------------- */
+  /* ---------------- wake lock ---------------- */
+  let wakeLock = null;
   function setWakeLockUI(state){
-    const el = document.getElementById("wakelock-note");
-    const txt = document.getElementById("wakelock-text");
+    const el = document.getElementById("wakelock-note"), txt = document.getElementById("wakelock-text");
     el.className = "wakelock-note";
-    if(state === "on"){
-      el.classList.add("on");
-      txt.textContent = "Wake Lock aktif — layar tetap menyala selama berbagi lokasi.";
-    } else if(state === "unsupported"){
-      el.classList.add("warn");
-      txt.textContent = "Browser ini belum mendukung Wake Lock. Di iPhone: jangan kunci layar & jangan pindah app saat berbagi, atau tambahkan ke Layar Utama supaya lebih stabil.";
-    } else if(state === "error"){
-      el.classList.add("warn");
-      txt.textContent = "Wake Lock gagal diaktifkan. Usahakan tetap buka halaman ini & jangan kunci layar saat berbagi.";
-    } else {
-      txt.textContent = "Wake Lock belum aktif — akan diminta saat kamu mulai berbagi lokasi.";
-    }
+    if(state==="on"){ el.classList.add("on"); txt.textContent = "Wake Lock aktif — layar tetap menyala selama berbagi."; }
+    else if(state==="unsupported"){ el.classList.add("warn"); txt.textContent = "Browser ini belum mendukung Wake Lock. Di iPhone: jangan kunci layar/pindah app saat berbagi supaya lokasi tidak berhenti."; }
+    else if(state==="error"){ el.classList.add("warn"); txt.textContent = "Wake Lock gagal aktif. Usahakan tetap buka halaman ini & jangan kunci layar."; }
+    else { txt.textContent = "Wake Lock belum aktif — diminta otomatis saat kamu mulai berbagi."; }
   }
-
   async function requestWakeLock(){
-    if(!("wakeLock" in navigator)){
-      setWakeLockUI("unsupported");
-      return;
-    }
-    try{
-      wakeLock = await navigator.wakeLock.request("screen");
-      setWakeLockUI("on");
-      wakeLock.addEventListener("release", ()=>{
-        if(isSharing) setWakeLockUI("error");
-      });
-    }catch(e){
-      setWakeLockUI("error");
-    }
+    if(!("wakeLock" in navigator)){ setWakeLockUI("unsupported"); return; }
+    try{ wakeLock = await navigator.wakeLock.request("screen"); setWakeLockUI("on");
+      wakeLock.addEventListener("release", ()=>{ if(isSharing) setWakeLockUI("error"); });
+    }catch(e){ setWakeLockUI("error"); }
   }
-  function releaseWakeLock(){
-    if(wakeLock){
-      try{ wakeLock.release(); }catch(e){/* abaikan */}
-      wakeLock = null;
-    }
-    setWakeLockUI("idle");
-  }
-  document.addEventListener("visibilitychange", ()=>{
-    if(isSharing && document.visibilityState === "visible" && !wakeLock){
-      requestWakeLock();
-    }
+  function releaseWakeLock(){ if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock=null; } setWakeLockUI("idle"); }
+  document.addEventListener("visibilitychange", ()=>{ if(isSharing && document.visibilityState==="visible" && !wakeLock) requestWakeLock(); });
+  setWakeLockUI("idle");
+
+  /* ---------------- durasi & share toggle ---------------- */
+  let selectedMinutes = 60;
+  document.querySelectorAll(".duration-btn").forEach(btn=>{
+    if(btn.dataset.min === "60") btn.classList.add("selected");
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".duration-btn").forEach(b=>b.classList.remove("selected"));
+      btn.classList.add("selected");
+      selectedMinutes = parseInt(btn.dataset.min, 10);
+    });
   });
 
-  /* ---------------- toggle berbagi lokasi ---------------- */
   const toggleBtn = document.getElementById("btn-toggle-share");
   const myStatusLine = document.getElementById("my-status-line");
+  let isSharing = false, watchId = null, autoStopTimer = null;
+  let lastWriteTs = 0, lastWritePos = null;
 
-  toggleBtn.addEventListener("click", ()=>{
-    if(isSharing) stopSharing(); else startSharing();
-  });
+  toggleBtn.addEventListener("click", ()=>{ if(isSharing) stopSharing(true); else startSharing(); });
 
   function startSharing(){
-    if(!("geolocation" in navigator)){
-      toast("Browser ini tidak mendukung akses lokasi");
-      return;
-    }
+    if(!("geolocation" in navigator)){ toast("Browser ini tidak mendukung akses lokasi"); return; }
     isSharing = true;
     toggleBtn.textContent = "⏹ Berhenti berbagi";
-    toggleBtn.classList.remove("off");
-    toggleBtn.classList.add("on");
+    toggleBtn.classList.remove("off"); toggleBtn.classList.add("on");
     myStatusLine.textContent = "Meminta izin lokasi…";
     requestWakeLock();
 
-    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
-      enableHighAccuracy: true,
-      maximumAge: 2000,
-      timeout: 20000,
+    const until = Date.now() + selectedMinutes*60000;
+    autoStopTimer = setTimeout(()=>{ stopSharing(false); toast("Waktu berbagi lokasi habis, otomatis berhenti."); }, selectedMinutes*60000);
+
+    watchId = navigator.geolocation.watchPosition(pos=>onPosition(pos, until), onPositionError, {
+      enableHighAccuracy:true, maximumAge:2000, timeout:20000
     });
   }
 
-  function stopSharing(){
+  function stopSharing(manual){
     isSharing = false;
-    toggleBtn.textContent = "📍 Mulai berbagi lokasi";
-    toggleBtn.classList.remove("on");
-    toggleBtn.classList.add("off");
-    myStatusLine.textContent = "Lokasimu belum dibagikan.";
-    if(watchId != null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+    toggleBtn.textContent = "📍 Bagikan lokasi live";
+    toggleBtn.classList.remove("on"); toggleBtn.classList.add("off");
+    myStatusLine.textContent = "Pilih durasi lalu mulai berbagi.";
+    if(watchId!=null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
+    if(autoStopTimer){ clearTimeout(autoStopTimer); autoStopTimer=null; }
     releaseWakeLock();
-    if(currentCode){
-      fbRemove("rooms/" + currentCode + "/locations/" + MEMBER_ID);
-    }
+    if(activeRoom) fbRemove("rooms/" + activeRoom + "/shares/" + USER_ID);
   }
 
-  let lastWriteTs = 0;
-  let lastWritePos = null;
-  function onPosition(pos){
+  function onPosition(pos, until){
     const {latitude, longitude, accuracy, heading, speed} = pos.coords;
     const now = Date.now();
-    myLastLoc = {lat: latitude, lng: longitude, ts: now};
-
-    const akurasiTxt = accuracy ? " · akurasi ±" + Math.round(accuracy) + "m" : "";
-    myStatusLine.textContent = "Berbagi aktif" + akurasiTxt;
+    const remainMin = Math.max(0, Math.round((until-now)/60000));
+    const akurasiTxt = accuracy ? " · akurasi ±"+Math.round(accuracy)+"m" : "";
+    myStatusLine.textContent = "Live · sisa "+remainMin+" mnt"+akurasiTxt;
 
     const movedEnough = !lastWritePos || haversine(lastWritePos[0], lastWritePos[1], latitude, longitude) > 6;
     const timeEnough = now - lastWriteTs > 3000;
     if(movedEnough || timeEnough){
-      lastWriteTs = now;
-      lastWritePos = [latitude, longitude];
-      fbSet("rooms/" + currentCode + "/locations/" + MEMBER_ID, {
-        lat: latitude, lng: longitude, accuracy, heading: heading||null, speed: speed||null, ts: now
-      });
+      lastWriteTs = now; lastWritePos = [latitude, longitude];
+      fbSet("rooms/" + activeRoom + "/shares/" + USER_ID, { lat: latitude, lng: longitude, accuracy, heading: heading||null, speed: speed||null, ts: now, until });
     }
   }
-
   function onPositionError(err){
-    myStatusLine.textContent = "Lokasi gagal (" + (err.message || "izin ditolak") + "). Coba lagi.";
+    myStatusLine.textContent = "Lokasi gagal ("+(err.message||"izin ditolak")+"). Coba lagi.";
     toast("Izin lokasi ditolak/gagal");
   }
 
-  /* ---------------- init ---------------- */
-  setWakeLockUI("idle");
-  const roomFromLink = readRoomFromURL();
-  if(roomFromLink){
-    kodeInput.value = roomFromLink;
-    showScreen("setup");
-    if(getSavedUsername()){
-      toast("Room \"" + roomFromLink + "\" siap — langsung masuk 👇");
-    } else {
-      toast("Room \"" + roomFromLink + "\" siap — isi nama kamu dulu ya");
-      usernameInput.focus();
-    }
-  }
 })();
 </script>
 </body>
