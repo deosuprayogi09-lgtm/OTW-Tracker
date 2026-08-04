@@ -133,6 +133,9 @@ input,select{font-family:inherit;}
 }
 .duration-btn:hover{border-color:var(--accent-amber);}
 .duration-btn.selected{background:var(--accent-amber);border-color:var(--accent-amber);color:#2a1c05;}
+.duration-btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);}
+.duration-btn:disabled:hover{border-color:var(--border-soft);}
+.duration-btn.selected:disabled{border-color:var(--accent-amber);}
 .share-toggle-btn{
   width:100%;border:none;border-radius:14px;padding:15px;font-family:var(--font-display);font-weight:600;font-size:15px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s ease, filter .15s ease;
@@ -309,8 +312,14 @@ input,select{font-family:inherit;}
     return false;
   }
 
-  function fbSet(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).set(value).then(()=>true).catch(e=>{console.error("fbSet",path,e);return false;}); }
-  function fbUpdate(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).update(value).then(()=>true).catch(e=>{console.error("fbUpdate",path,e);return false;}); }
+  let fbWriteFailWarned = false;
+  function warnFbWriteFail(){
+    if(fbWriteFailWarned) return;
+    fbWriteFailWarned = true;
+    toast("⚠️ Gagal simpan ke server (cek Firebase Rules — izinkan read/write publik untuk /rooms & /users)");
+  }
+  function fbSet(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).set(value).then(()=>true).catch(e=>{console.error("fbSet",path,e); warnFbWriteFail(); return false;}); }
+  function fbUpdate(path, value){ if(!fbReady) return Promise.resolve(false); return db.ref(path).update(value).then(()=>true).catch(e=>{console.error("fbUpdate",path,e); warnFbWriteFail(); return false;}); }
   function fbRemove(path){ if(!fbReady) return Promise.resolve(false); return db.ref(path).remove().then(()=>true).catch(()=>false); }
   function fbGet(path){ if(!fbReady) return Promise.resolve(null); return db.ref(path).get().then(s=>s.exists()?s.val():null).catch(()=>null); }
   function fbListen(path, cb){ if(!fbReady) return null; return db.ref(path).on("value", snap => cb(snap.exists()?snap.val():null)); }
@@ -748,17 +757,10 @@ input,select{font-family:inherit;}
   document.querySelectorAll(".duration-btn").forEach(btn=>{
     if(btn.dataset.min === "60") btn.classList.add("selected");
     btn.addEventListener("click", ()=>{
+      if(isSharing) return; // durasi dikunci selama sedang berbagi
       document.querySelectorAll(".duration-btn").forEach(b=>b.classList.remove("selected"));
       btn.classList.add("selected");
       selectedMinutes = parseInt(btn.dataset.min, 10);
-      if(isSharing){
-        // ganti durasi langsung walau sedang aktif berbagi, tidak perlu stop dulu
-        currentUntil = Date.now() + selectedMinutes*60000;
-        if(autoStopTimer) clearTimeout(autoStopTimer);
-        autoStopTimer = setTimeout(()=>{ stopSharing(false); toast("Waktu berbagi lokasi habis, otomatis berhenti."); }, selectedMinutes*60000);
-        if(activeRoom) fbUpdate("rooms/" + activeRoom + "/shares/" + USER_ID, { until: currentUntil });
-        toast("Durasi diperpanjang jadi " + btn.textContent.trim());
-      }
     });
   });
 
@@ -769,6 +771,10 @@ input,select{font-family:inherit;}
 
   toggleBtn.addEventListener("click", ()=>{ if(isSharing) stopSharing(true); else startSharing(); });
 
+  function setDurationButtonsDisabled(disabled){
+    document.querySelectorAll(".duration-btn").forEach(b=>{ b.disabled = disabled; });
+  }
+
   function startSharing(){
     if(!("geolocation" in navigator)){ toast("Browser ini tidak mendukung akses lokasi"); return; }
     isSharing = true;
@@ -776,6 +782,7 @@ input,select{font-family:inherit;}
     toggleBtn.textContent = "⏹ Berhenti berbagi";
     toggleBtn.classList.remove("off"); toggleBtn.classList.add("on");
     myStatusLine.textContent = "Meminta izin lokasi…";
+    setDurationButtonsDisabled(true);
     requestWakeLock();
 
     currentUntil = Date.now() + selectedMinutes*60000;
@@ -791,10 +798,14 @@ input,select{font-family:inherit;}
     toggleBtn.textContent = "📍 Bagikan lokasi live";
     toggleBtn.classList.remove("on"); toggleBtn.classList.add("off");
     myStatusLine.textContent = "Pilih durasi lalu mulai berbagi.";
+    setDurationButtonsDisabled(false);
     if(watchId!=null){ navigator.geolocation.clearWatch(watchId); watchId=null; }
     if(autoStopTimer){ clearTimeout(autoStopTimer); autoStopTimer=null; }
     releaseWakeLock();
     if(activeRoom) fbRemove("rooms/" + activeRoom + "/shares/" + USER_ID);
+    delete sharesData[USER_ID];
+    renderMembers();
+    renderMapMarkers();
   }
 
   function onPosition(pos){
@@ -812,6 +823,17 @@ input,select{font-family:inherit;}
       mapRoom.setView([latitude, longitude], 16);
       renderMapMarkers._fitted = true;
     }
+
+    // update lokal langsung (optimistic) supaya ikon & status "kamu" SELALU tampil,
+    // tidak tergantung berhasil-tidaknya tulisan ke server
+    sharesData = Object.assign({}, sharesData, {
+      [USER_ID]: { lat: latitude, lng: longitude, accuracy, heading: heading||null, speed: speed||null, ts: now, until: currentUntil }
+    });
+    if(!membersData[USER_ID]){
+      membersData = Object.assign({}, membersData, { [USER_ID]: { name: myName, joinedAt: now } });
+    }
+    renderMembers();
+    renderMapMarkers();
 
     const movedEnough = isFirstFix || haversine(lastWritePos[0], lastWritePos[1], latitude, longitude) > 6;
     const timeEnough = now - lastWriteTs > 3000;
